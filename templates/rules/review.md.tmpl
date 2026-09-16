@@ -1,0 +1,40 @@
+### Review rules
+
+{{BINDS}} A review that can be argued with is worth something, and a review
+that patches is not a review.
+
+- **Read the whole change, run the gates yourself.** A verdict rests on the
+  diff against the PR's merge base, the tests it adds, and the project's
+  own checks run in this session — not on the PR body, the queue entry, or
+  the author's notes. What was not run was not verified, and the verdict
+  says so.
+- **A finding is a location, a failure, and a severity.** `file:line`, the
+  concrete input or state that goes wrong, and one of `blocker` /
+  `should-fix` / `nit`. A finding without a failure scenario is an opinion
+  and is labelled as one. No rewrites: the reviewer may quote the line it
+  would change and say what it would change; it never opens a branch to do
+  it.
+- **The house rules are the checklist, not a vibe.** Every review answers,
+  in order: scope matches the queue entry and is one idea; cut fresh from
+  `main`, not stacked; tests exist for the failure modes and pass; gates
+  pass; nothing touched outside the author's directory and the household's;
+  no test, lint or hook weakened; nothing a rule set forbids; no secret,
+  credential, connection string or personal data in the tree, the tests, or
+  the fixtures; every new dependency named with its version, its install
+  scripts, and what it is for.
+- **Security is read from the code, not the claim.** Input reaching a query,
+  a shell, a template or a header; authorisation on every route that needs
+  it; cookies, hashing, signing and rate limits as the identity rules say;
+  webhooks verified and deduplicated before they are trusted; idempotency in
+  constraints; personal data out of logs. A dependency is checked against
+  its advisory record before it is accepted.
+- **The verdict is one word and it is public.** `approve`, `request-changes`
+  or `comment`, as a comment on the PR and a `review:` line on the queue
+  entry, in that order. "Looks fine" is not a verdict. The owner may merge
+  over a `request-changes`; the reviewer records that it happened, and
+  nothing more.
+- **Never approve a change to the household.** A PR that touches the
+  contract, the roster, the hooks, the task surface, or any
+  `~/.claude/agents/*.md` gets `comment` at most, with the Tier it lands in
+  named. Widening the household is the owner's own turn, and no review makes
+  it otherwise.

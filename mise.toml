@@ -1,0 +1,14 @@
+[settings]
+experimental = true
+quiet = true
+task_output = "interleave"
+
+[tools]
+"aqua:KnickKnackLabs/bats-core" = "1.14.0-kkl.3"
+
+[settings.aqua]
+registries = ["https://github.com/KnickKnackLabs/bats-core"]
+
+[_.codebase]
+name = "house"
+lint = ["mise-settings"]

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#MISE description="Check a house against the framework's invariants"
+#USAGE flag "--house <path>" help="The house directory; defaults to the current directory"
+set -euo pipefail
+
+source "$MISE_CONFIG_ROOT/lib/house.sh"
+
+HOUSE="$(house_root "${usage_house:-.}")"
+WORK="$(house_work_dir "$HOUSE")"
+AGENTS_ROOT="${HOUSE_AGENTS_ROOT:-$HOME/agents}"
+DEFINITIONS_DIR="${HOUSE_DEFINITIONS_DIR:-$HOME/.claude/agents}"
+FAILS=0
+
+ok()   { say "ok:   $*"; }
+warn() { say "warn: $*"; }
+fail() { say "fail: $*"; FAILS=$((FAILS + 1)); }
+
+say "house: $(display_path "$HOUSE")"
+say "work:  $(display_path "$WORK")"
+say ""
+
+for f in AGENTS.md README.md mise.toml roster.tsv notes/work-queue.md notes/household-backlog.md \
+         hooks/agent-identity .mise/tasks/welcome .mise/tasks/test .mise/tasks/agent-env .mise/tasks/install-hooks; do
+  if [ -f "$HOUSE/$f" ]; then ok "$f"; else fail "$f missing"; fi
+done
+
+for f in hooks/agent-identity .mise/tasks/welcome .mise/tasks/test .mise/tasks/agent-env .mise/tasks/install-hooks; do
+  [ -f "$HOUSE/$f" ] && [ ! -x "$HOUSE/$f" ] && fail "$f is not executable"
+done
+
+for marker in "<!-- house:roster -->" "<!-- house:rules -->" "<!-- house:read-first -->"; do
+  if grep -qxF "$marker" "$HOUSE/AGENTS.md" 2>/dev/null; then ok "marker $marker"; else fail "AGENTS.md lacks marker $marker"; fi
+done
+
+for heading in "### The tiers — canonical list" "### The loosenings — canonical list" "#### The two-key rule"; do
+  if grep -qxF "$heading" "$HOUSE/AGENTS.md" 2>/dev/null; then ok "section $heading"; else fail "AGENTS.md lacks section: $heading"; fi
+done
+
+hook_target="$(git -C "$WORK" rev-parse --git-path hooks/pre-commit 2>/dev/null || true)"
+case "$hook_target" in
+  "")  fail "work tree is not a git repository: $(display_path "$WORK")" ;;
+  /*)  ;;
+  *)   hook_target="$WORK/$hook_target" ;;
+esac
+if [ -n "$hook_target" ]; then
+  if [ -x "$hook_target" ]; then ok "pre-commit guard installed in the work tree"; else warn "pre-commit guard not installed → mise run install-hooks"; fi
+fi
+
+count=0
+while IFS= read -r agent; do
+  count=$((count + 1))
+  if [ -f "$HOUSE/notes/$agent.md" ]; then ok "$agent: notes/$agent.md"; else fail "$agent: notes/$agent.md missing"; fi
+  if grep -q "^- \*\*$agent\*\* — " "$HOUSE/AGENTS.md"; then ok "$agent: on the roster in AGENTS.md"; else fail "$agent: not listed under 'Who lives here' in AGENTS.md"; fi
+  if [ -f "$AGENTS_ROOT/$agent/home/AGENTS.md" ]; then ok "$agent: home at $(display_path "$AGENTS_ROOT/$agent/home")"; else warn "$agent: no home at $(display_path "$AGENTS_ROOT/$agent/home")"; fi
+  if [ -f "$DEFINITIONS_DIR/$agent.md" ]; then ok "$agent: definition at $(display_path "$DEFINITIONS_DIR/$agent.md")"; else warn "$agent: no definition at $(display_path "$DEFINITIONS_DIR/$agent.md")"; fi
+done < <(roster_agents "$HOUSE")
+[ "$count" -gt 0 ] || warn "roster is empty → house agent add <name> --role <role>"
+
+say ""
+if [ "$FAILS" -eq 0 ]; then
+  say "doctor: healthy"
+else
+  say "doctor: $FAILS failing"
+  exit 1
+fi

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#MISE description="Orientation and setup health for the {{HOUSE_NAME}} household"
+set -eo pipefail
+
+roster="$HOUSE_DIR/roster.tsv"
+
+on_roster() {
+  awk -F '\t' -v n="$1" '!/^#/ && $1 == n { found = 1 } END { exit !found }' "$roster"
+}
+
+echo "== identity =="
+author="${GIT_AUTHOR_NAME:-unset}"
+echo "GIT_AUTHOR_NAME: $author"
+if [ "$author" = unset ]; then
+  echo "not activated — ask the owner which agent you are, then: eval \"\$(mise run -q agent-env <name>)\""
+elif on_roster "$author"; then
+  echo "home: ~/agents/$author/home/AGENTS.md"
+else
+  echo "not a household agent; owner commits need {{HOUSE_UPPER}}_OWNER_COMMIT=1"
+fi
+
+echo ""
+echo "== roster =="
+agents="$(awk -F '\t' '!/^#/ && NF { print $1 }' "$roster" | tr '\n' ' ')"
+if [ -n "$agents" ]; then
+  echo "$agents"
+else
+  echo "nobody yet → house agent add <name> --house $HOUSE_DIR --role <role>"
+fi
+
+echo ""
+echo "== work tree =="
+work="$(cd "$WORK_DIR" && pwd -P)"
+echo "path: $work"
+echo "branch: $(git -C "$WORK_DIR" branch --show-current 2>/dev/null || echo '?')"
+dirty=$(git -C "$WORK_DIR" status --porcelain 2>/dev/null | wc -l)
+echo "uncommitted paths: $dirty"
+hook="$(git -C "$WORK_DIR" rev-parse --git-path hooks/pre-commit 2>/dev/null || true)"
+case "$hook" in /*) ;; ?*) hook="$WORK_DIR/$hook" ;; esac
+if [ -n "$hook" ] && [ -x "$hook" ]; then
+  echo "pre-commit guard: installed"
+else
+  echo "pre-commit guard: missing → mise run install-hooks"
+fi
+
+echo ""
+echo "== work queue =="
+queue="$HOUSE_DIR/notes/work-queue.md"
+if grep -q '^- state: queued$' "$queue"; then
+  grep -B1 '^- state: queued$' "$queue" | grep '^## ' | head -3
+else
+  echo "nothing queued"
+fi
+
+echo ""
+echo "== read first =="
+echo "$HOUSE_DIR/AGENTS.md"

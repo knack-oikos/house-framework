@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#MISE description="Run the framework's tests"
+#MISE dir="{{ config_root }}"
+set -euo pipefail
+
+printf '\n== bats ==\n'
+bats --print-output-on-failure test
+
+printf '\n== templates ==\n'
+for f in templates/house/hooks/agent-identity.tmpl templates/house/.mise/tasks/*.tmpl; do
+  bash -n "$f"
+done
+echo ok

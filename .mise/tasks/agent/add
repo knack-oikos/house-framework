@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#MISE description="Put an agent on a house's roster: identity note, home repo, and Claude agent definition"
+#USAGE arg "<name>" help="Agent name, lowercase (for example: vulcan)"
+#USAGE flag "--house <path>" help="The house directory; defaults to the current directory"
+#USAGE flag "--role <role>" help="Two or three words: what the agent is for; defaults to 'housekeeping' for --kind housekeeper"
+#USAGE flag "--owns <dir>" help="Directory under the work tree a builder owns, with a trailing slash"
+#USAGE flag "--kind <kind>" help="builder, judge, or housekeeper; defaults to builder with --owns, judge without"
+#USAGE flag "--charge <charge>" help="One sentence on what the agent does; defaults to a sentence built from the kind"
+#USAGE flag "--tools <tools>" help="Claude tool list for the definition; defaults by kind"
+#USAGE flag "--no-home" help="Do not create ~/agents/<name>/home"
+#USAGE flag "--no-definition" help="Do not write ~/.claude/agents/<name>.md"
+#USAGE example "house agent add vulcan --role backend --owns server/ --charge 'Owns the schema, the domain model and the API.'" header="A builder"
+#USAGE example "house agent add argus --role 'review and security' --charge 'Reads every pull request into main before the owner merges it.'" header="A judge"
+#USAGE example "house agent add housekeeper --kind housekeeper" header="A housekeeper, if the house was created without one"
+set -euo pipefail
+
+source "$MISE_CONFIG_ROOT/lib/house.sh"
+
+NAME="${usage_name:?an agent name is required}"
+HOUSE="$(house_root "${usage_house:-.}")"
+OWNS="${usage_owns:-}"
+KIND="${usage_kind:-}"
+if [ -z "$KIND" ]; then
+  if [ -n "$OWNS" ]; then KIND=builder; else KIND=judge; fi
+fi
+ROLE="${usage_role:-}"
+if [ -z "$ROLE" ] && [ "$KIND" = housekeeper ]; then ROLE=housekeeping; fi
+[ -n "$ROLE" ] || die "--role is required"
+
+add_agent "$HOUSE" "$NAME" "$ROLE" "$OWNS" "${usage_charge:-}" "${usage_tools:-}" "$KIND" \
+  "${usage_no_home:-false}" "${usage_no_definition:-false}"
+
+say ""
+say "done: $NAME joins $(house_name "$HOUSE") as $ROLE"
+if [ "$KIND" = housekeeper ]; then
+  say "next: wake it once and let it report; its first sweep is the house's first audit"
+else
+  say "next: write the Stance section of notes/$NAME.md, then commit the house as the owner"
+  say "next: file the agent's first entry in notes/work-queue.md, addressed to $NAME"
+fi

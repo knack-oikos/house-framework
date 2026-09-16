@@ -1,0 +1,71 @@
+house() {
+  local task="$1"
+  shift
+  case "$task" in
+    agent|rules) task="$task:$1"; shift ;;
+  esac
+  cd "$REPO_DIR" && env \
+    HOUSE_CALLER_PWD="$CALLER" \
+    HOUSE_AGENTS_ROOT="$AGENTS_ROOT" \
+    HOUSE_DEFINITIONS_DIR="$DEFINITIONS_DIR" \
+    GIT_CONFIG_GLOBAL=/dev/null \
+    GIT_CONFIG_NOSYSTEM=1 \
+    mise run -q "$task" "$@"
+}
+export -f house
+
+in_house() {
+  local dir="$1"
+  shift
+  env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 mise -C "$dir" run -q "$@"
+}
+export -f in_house
+
+setup() {
+  export CALLER="$BATS_TEST_TMPDIR/caller"
+  export AGENTS_ROOT="$BATS_TEST_TMPDIR/agents"
+  export DEFINITIONS_DIR="$BATS_TEST_TMPDIR/definitions"
+  export MISE_TRUSTED_CONFIG_PATHS="$BATS_TEST_TMPDIR"
+  export GIT_AUTHOR_NAME="house test"
+  export GIT_AUTHOR_EMAIL="house-test@example.invalid"
+  export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+  export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+  mkdir -p "$CALLER" "$AGENTS_ROOT" "$DEFINITIONS_DIR"
+}
+
+make_project() {
+  local dir="$BATS_TEST_TMPDIR/project"
+  git init -q -b main "$dir"
+  printf 'project\n' > "$dir/README.md"
+  git -C "$dir" -c commit.gpgsign=false add README.md
+  git -C "$dir" -c commit.gpgsign=false commit -q -m "initial"
+  printf '%s' "$dir"
+}
+
+assert_success() {
+  if [ "$status" -ne 0 ]; then
+    printf 'expected success, got status %s\noutput:\n%s\n' "$status" "$output" >&2
+    return 1
+  fi
+}
+
+assert_failure() {
+  if [ "$status" -eq 0 ]; then
+    printf 'expected failure, got success\noutput:\n%s\n' "$output" >&2
+    return 1
+  fi
+}
+
+assert_output_contains() {
+  case "$output" in
+    *"$1"*) ;;
+    *) printf 'expected output to contain %s\noutput:\n%s\n' "$1" "$output" >&2; return 1 ;;
+  esac
+}
+
+assert_file_contains() {
+  grep -qF -- "$2" "$1" || {
+    printf 'expected %s to contain %s\n' "$1" "$2" >&2
+    return 1
+  }
+}

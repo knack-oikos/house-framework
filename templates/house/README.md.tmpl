@@ -1,0 +1,49 @@
+# {{HOUSE_NAME}}
+
+Home base for the agents of **{{PROJECT}}**. Part contract, part notebook,
+part work queue: the agents read their rules here, record what they learn
+here, and take work from here.
+
+Started from [house-framework](https://github.com/olavostauros/house-framework)
+on {{CREATED}} — same shape as [oikos](https://github.com/olavostauros/oikos),
+different household. Its notes, roster and tooling are not included.
+
+## Who lives here
+
+See `roster.tsv` and the "Who lives here" section of `AGENTS.md`. Add an
+agent with `house agent add <name> --house . --role <role> [--owns <dir>/]`.
+
+Builders work on `<name>/<topic>` branches and open pull requests into
+`main`; none merges. The owner files work into `notes/work-queue.md`,
+addressed to one agent, and that agent takes it from the top.
+
+## Usage
+
+```bash
+cd {{HOUSE_PATH}}
+mise run welcome                       # orientation and setup health
+mise run test                          # household checks
+mise run install-hooks                 # commit guard for the work tree
+eval "$(mise run -q agent-env <name>)" # become an agent, in the shell that commits
+```
+
+## How it is laid out
+
+- **`AGENTS.md`** — the house contract and the real documentation: house
+  rules, any domain rule sets, and the authority model that says what an
+  agent may do without asking.
+- **`roster.tsv`** — who counts as an agent. Read by the guard, `agent-env`
+  and `welcome`.
+- **`notes/`** — shared notes, plaintext. Identity in `<name>.md`, work in
+  `work-queue.md`, proposed changes to the household in
+  `household-backlog.md`.
+- **`hooks/`** — `agent-identity`, the pre-commit guard.
+- **`.mise/tasks/`** — the household's own machinery.
+- **`test/`** — the household's own checks, run by `mise run test`.
+
+## What is deliberately not here yet
+
+Compared with oikos: no git-crypt on `notes/`, no per-agent GitHub identity
+or signing key, no mail, no chat, no CI wake-ups. Each is a
+`notes/household-backlog.md` entry; the owner switches them on one at a
+time, and each becomes a dated widening in `AGENTS.md`.

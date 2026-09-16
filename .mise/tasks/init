@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+#MISE description="Scaffold a household: contract, roster, queue, guard, and tasks"
+#USAGE arg "<name>" help="Household name, lowercase (for example: agora)"
+#USAGE flag "--at <path>" help="Where to create it; defaults to ./<name>"
+#USAGE flag "--embedded" help="The house is a directory inside an existing project repo, not a repo of its own"
+#USAGE flag "--project <project>" help="What the household works on; defaults to the parent repo's name when embedded, else the house name"
+#USAGE flag "--owner <owner>" help="The owner's name as it appears in the record; defaults to git user.name"
+#USAGE flag "--no-housekeeper" help="Do not add the housekeeper agent"
+#USAGE flag "--housekeeper-name <name>" help="Name for the housekeeper; defaults to 'housekeeper'"
+#USAGE flag "--no-commit" help="Leave the generated files uncommitted"
+#USAGE example "house init agora --at ~/Work/ticket/agora --embedded" header="A house inside the project it works on"
+#USAGE example "house init oikos --at ~/Work/oikos" header="A standalone house that works on other repos"
+set -euo pipefail
+
+source "$MISE_CONFIG_ROOT/lib/house.sh"
+
+NAME="${usage_name:?a house name is required}"
+validate_name "house name" "$NAME"
+UPPER="$(upper_env "$NAME")"
+EMBEDDED="${usage_embedded:-false}"
+OWNER="${usage_owner:-$(git config user.name 2>/dev/null || true)}"
+OWNER="${OWNER:-the owner}"
+KEEPER="${usage_housekeeper_name:-housekeeper}"
+AGENTS_ROOT="${HOUSE_AGENTS_ROOT:-$HOME/agents}"
+DEFINITIONS_DIR="${HOUSE_DEFINITIONS_DIR:-$HOME/.claude/agents}"
+
+TARGET="$(resolve_path "${usage_at:-$NAME}")"
+TARGET="$(canonical_path "$TARGET")"
+PARENT="$(dirname "$TARGET")"
+
+if [ "$EMBEDDED" = "true" ]; then
+  WORK="$(git -C "$PARENT" rev-parse --show-toplevel 2>/dev/null || true)"
+  [ -n "$WORK" ] || die "--embedded needs the parent of $TARGET to be inside a git repository"
+  PROJECT="${usage_project:-$(basename "$WORK")}"
+  WORK_DIR_EXPR='{{ config_root }}/..'
+  PLACEMENT="This household lives **inside** the project it works on: \`$(display_path "$TARGET")\` is a directory of the \`$PROJECT\` repo, not a repo of its own. Home and work share one git history, so the branch rules below bind both."
+else
+  WORK="$TARGET"
+  PROJECT="${usage_project:-$NAME}"
+  WORK_DIR_EXPR='{{ config_root }}'
+  PLACEMENT="This household is a repository of its own. The work happens in other repositories, cloned into each agent's workspace; the household is where the rules, the queue and the record of that work are kept."
+fi
+
+if [ "${usage_no_housekeeper:-false}" = "true" ]; then
+  HOUSEKEEPER_CLAUSE="This house has no housekeeper; the owner keeps the record true, and a later \`house agent add <name> --kind housekeeper\` changes that."
+else
+  validate_name "housekeeper name" "$KEEPER"
+  for taken in "$AGENTS_ROOT/$KEEPER/home/AGENTS.md" "$DEFINITIONS_DIR/$KEEPER.md"; do
+    [ ! -e "$taken" ] || die "$(display_path "$taken") already exists — another house's housekeeper? Pass --housekeeper-name <name> or --no-housekeeper"
+  done
+  HOUSEKEEPER_CLAUSE="The exception is **$KEEPER**, the housekeeper, whose work is standing and needs no filing: keeping this record true. It carries no GitHub identity and no mail, by design, and speaks only to the owner in the session."
+fi
+
+VARS=(
+  "HOUSE_NAME=$NAME"
+  "HOUSEKEEPER_CLAUSE=$HOUSEKEEPER_CLAUSE"
+  "HOUSE_UPPER=$UPPER"
+  "HOUSE_PATH=$(display_path "$TARGET")"
+  "WORK_PATH=$(display_path "$WORK")"
+  "WORK_DIR_EXPR=$WORK_DIR_EXPR"
+  "PROJECT=$PROJECT"
+  "OWNER=$OWNER"
+  "PLACEMENT=$PLACEMENT"
+  "CREATED=$(today)"
+)
+
+NEW_REPO=false
+if [ "$EMBEDDED" != "true" ] && [ ! -d "$TARGET/.git" ]; then
+  git -C "$TARGET" init -q -b main
+  say "init: git repo at $(display_path "$TARGET")"
+  NEW_REPO=true
+fi
+
+PREEXISTING="$(git -C "$WORK" status --porcelain -- "$TARGET" 2>/dev/null || true)"
+
+install_tree "$HOUSE_TEMPLATES/house" "$TARGET" "${VARS[@]}"
+
+mise trust "$TARGET/mise.toml" >/dev/null
+
+if [ "${usage_no_housekeeper:-false}" != "true" ]; then
+  add_agent "$TARGET" "$KEEPER" housekeeping "" "" "" housekeeper false false
+fi
+
+if [ "${usage_no_commit:-false}" = "true" ]; then
+  say "skip: initial commit (--no-commit)"
+elif [ "$NEW_REPO" = "true" ] && [ -z "$PREEXISTING" ]; then
+  git -C "$TARGET" add .
+  env "${UPPER}_OWNER_COMMIT=1" git -C "$TARGET" commit -q -m "$NAME: bootstrap the household from house-framework"
+  say "commit: bootstrap the household"
+else
+  say "next: review the new files under $(display_path "$TARGET") and commit them as the owner"
+fi
+
+say ""
+say "done: $NAME at $(display_path "$TARGET") (work tree: $(display_path "$WORK"))"
+say "next: house agent add <name> --house $(display_path "$TARGET") --role '<role>' [--owns <dir>/]"
+say "next: cd $(display_path "$TARGET") && mise run install-hooks && mise run welcome"

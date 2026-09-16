@@ -1,0 +1,21 @@
+### Identity rules
+
+{{BINDS}} A login is the door to everything else, including whatever the
+other rule sets protect.
+
+- **Passwords are hashed with a slow, salted algorithm** (argon2id or
+  bcrypt) and never logged, echoed, or compared in plaintext. A password
+  never appears in a URL, a query string, or an error message.
+- **Sessions are server-side, in an `HttpOnly`, `Secure`, `SameSite`
+  cookie.** No token in `localStorage`, no session id in a URL. Sign-out
+  invalidates the session on the server, not just in the browser.
+- **No secrets in the tree.** Session signing keys, OAuth client secrets and
+  mail credentials come from the environment. `.env.example` carries names
+  only.
+- **Rate-limit and don't enumerate.** Sign-in and reset endpoints are
+  throttled, and "wrong password" and "no such account" are the same answer.
+- **Sandbox by default.** Any third-party identity provider is used in its
+  test mode until the owner's own turn says otherwise.
+- **Who may log in as whom is Tier 2.** Roles, admin flags, account linking,
+  a new identity provider: proposed with the exact change, applied by the
+  owner.

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Install the agent-identity guard as the work tree's pre-commit hook"
+set -eo pipefail
+
+target="$(git -C "$WORK_DIR" rev-parse --git-path hooks/pre-commit)"
+case "$target" in /*) ;; *) target="$WORK_DIR/$target" ;; esac
+mkdir -p "$(dirname "$target")"
+ln -sf "$HOUSE_DIR/hooks/agent-identity" "$target"
+echo "installed: $target -> $HOUSE_DIR/hooks/agent-identity"
