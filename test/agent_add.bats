@@ -134,3 +134,12 @@ setup() {
   assert_failure
   assert_output_contains "not a house"
 }
+
+@test "agent add renders a charge with an ampersand verbatim" {
+  run house agent add caesar --house "$H" --role payments --owns payments/ --charge 'Takes money & refunds it.'
+  assert_success
+  assert_file_contains "$H/AGENTS.md" "Takes money & refunds it."
+  assert_file_contains "$H/notes/caesar.md" "Takes money & refunds it."
+  assert_file_contains "$AGENTS_ROOT/caesar/home/AGENTS.md" "Takes money & refunds it."
+  ! grep -rq '{{CHARGE}}' "$H/AGENTS.md" "$H/notes/caesar.md" "$AGENTS_ROOT/caesar/home"
+}
