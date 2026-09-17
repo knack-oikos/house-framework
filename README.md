@@ -87,6 +87,12 @@ house export claude-code
 A standalone house gets its own repo and a bootstrap commit. An embedded
 house is a directory of the project repo; you commit it as the owner.
 
+If your git config signs commits, `init` says so and names the key before
+the passphrase prompt can appear, and `--no-commit` avoids it. Every house's
+`mise run welcome` reports the same state, and the house README's *Signing*
+section says what a signing machine means for the agents: their commits
+carry the owner's key, and a stalled prompt is reported, never worked around.
+
 ## The housekeeper
 
 Every house has exactly one, and it is always named `housekeeper`. `init`

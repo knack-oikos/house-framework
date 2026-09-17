@@ -46,6 +46,18 @@ else
 fi
 
 echo ""
+echo "== signing =="
+if [ "$(git -C "$WORK_DIR" config --type=bool commit.gpgsign 2>/dev/null)" = true ]; then
+  format="$(git -C "$WORK_DIR" config gpg.format 2>/dev/null || echo openpgp)"
+  key="$(git -C "$WORK_DIR" config user.signingkey 2>/dev/null || echo "unset; picked by the committer identity")"
+  echo "commits here: signed ($format, key $key)"
+  echo "agent-env sets the author only: a commit made as an agent is signed with this same key and verifies as its holder, not as the agent"
+  echo "a passphrase prompt during a commit is for this key; if it stalls, stop and report — never turn signing off"
+else
+  echo "commits here: unsigned"
+fi
+
+echo ""
 echo "== work queue =="
 queue="$HOUSE_DIR/notes/work-queue.md"
 if grep -q '^- state: queued$' "$queue"; then

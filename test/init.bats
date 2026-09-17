@@ -91,6 +91,65 @@ load test_helper
   assert_output_contains "nothing queued"
 }
 
+@test "init names the signing key before the bootstrap commit when the git config signs" {
+  signing_env
+  run house init hearth --at "$BATS_TEST_TMPDIR/hearth"
+  assert_success
+  assert_output_contains "sign: the bootstrap commit is signed (openpgp, key 0123456789ABCDEF)"
+  assert_output_contains "--no-commit leaves the files"
+  [[ "$output" == *"sign: the bootstrap commit"*"commit: bootstrap the household"* ]]
+  grep -q -- '-bsau 0123456789ABCDEF' "$FAKE_GPG_LOG"
+  git -C "$BATS_TEST_TMPDIR/hearth" cat-file commit HEAD | grep -q '^gpgsig '
+}
+
+@test "init names the committer identity when the config signs with no user.signingkey" {
+  signing_env
+  export GIT_CONFIG_COUNT=2
+  run house init hearth --at "$BATS_TEST_TMPDIR/hearth"
+  assert_success
+  assert_output_contains "sign: the bootstrap commit is signed (openpgp, no user.signingkey — picked by the committer identity house test <house-test@example.invalid>)"
+}
+
+@test "init says nothing about signing when commits are unsigned or --no-commit" {
+  run house init hearth --at "$BATS_TEST_TMPDIR/hearth"
+  assert_success
+  ! [[ "$output" == *"sign:"* ]]
+  signing_env
+  run house init hall --at "$BATS_TEST_TMPDIR/hall" --no-commit
+  assert_success
+  ! [[ "$output" == *"sign:"* ]]
+  [ ! -e "$FAKE_GPG_LOG" ]
+}
+
+@test "welcome reports the signing state, the key, and that an agent signs as the owner" {
+  house init hearth --at "$BATS_TEST_TMPDIR/hearth"
+  run in_house "$BATS_TEST_TMPDIR/hearth" welcome
+  assert_success
+  assert_output_contains "== signing =="
+  assert_output_contains "commits here: unsigned"
+  signing_env
+  run env GIT_AUTHOR_NAME=housekeeper bash -c 'in_house "$@"' _ "$BATS_TEST_TMPDIR/hearth" welcome
+  assert_success
+  assert_output_contains "commits here: signed (openpgp, key 0123456789ABCDEF)"
+  assert_output_contains "signed with this same key"
+  assert_output_contains "stop and report"
+  export GIT_CONFIG_COUNT=2
+  run in_house "$BATS_TEST_TMPDIR/hearth" welcome
+  assert_success
+  assert_output_contains "commits here: signed (openpgp, key unset; picked by the committer identity)"
+}
+
+@test "the house README and the housekeeper's home say what a signing machine means" {
+  house init hearth --at "$BATS_TEST_TMPDIR/hearth"
+  h="$BATS_TEST_TMPDIR/hearth"
+  assert_file_contains "$h/README.md" "## Signing"
+  assert_file_contains "$h/README.md" "signed with the owner's key"
+  assert_file_contains "$h/README.md" "git -C $h config"
+  assert_file_contains "$AGENTS_ROOT/hearth/home/AGENTS.md" "stalls on its passphrase prompt is reported, not"
+  assert_file_contains "$AGENTS_ROOT/hearth/home/AGENTS.md" "never set"
+  assert_file_contains "$AGENTS_ROOT/hearth/home/AGENTS.md" "HEARTH_OWNER_COMMIT"
+}
+
 @test "install-hooks wires the guard into the work tree and the guard refuses the owner" {
   house init hearth --at "$BATS_TEST_TMPDIR/hearth"
   h="$BATS_TEST_TMPDIR/hearth"

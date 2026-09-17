@@ -42,6 +42,26 @@ make_project() {
   printf '%s' "$dir"
 }
 
+signing_env() {
+  local fake="$BATS_TEST_TMPDIR/fake-gpg"
+  cat > "$fake" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "${FAKE_GPG_LOG:?}"
+case " $* " in
+  *" -bsau "*)
+    printf '\n[GNUPG:] SIG_CREATED D 1 8 00 0 X\n' >&2
+    printf -- '-----BEGIN PGP SIGNATURE-----\nfake\n-----END PGP SIGNATURE-----\n'
+    ;;
+esac
+EOF
+  chmod +x "$fake"
+  export FAKE_GPG_LOG="$BATS_TEST_TMPDIR/gpg.log"
+  export GIT_CONFIG_COUNT=3 \
+    GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=true \
+    GIT_CONFIG_KEY_1=gpg.program "GIT_CONFIG_VALUE_1=$fake" \
+    GIT_CONFIG_KEY_2=user.signingkey GIT_CONFIG_VALUE_2=0123456789ABCDEF
+}
+
 assert_success() {
   if [ "$status" -ne 0 ]; then
     printf 'expected success, got status %s\noutput:\n%s\n' "$status" "$output" >&2
