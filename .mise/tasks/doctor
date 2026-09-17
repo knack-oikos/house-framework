@@ -76,7 +76,9 @@ if [ -n "$pins" ]; then
     case "$pkg" in
       notes)
         if notes_encrypted "$HOUSE" "$WORK"; then
-          ok "notes: $(notes_dir_rel "$HOUSE" "$WORK")/** is encrypted in .gitattributes"
+          ok "notes: $(notes_dir_rel "$HOUSE" "$WORK")/** is encrypted: filter in .gitattributes, key under .git-crypt/keys/default"
+        elif notes_attribute_set "$HOUSE" "$WORK"; then
+          fail "notes: $(notes_dir_rel "$HOUSE" "$WORK")/** has the git-crypt filter line but no key under .git-crypt/keys/default, so git commits it in plaintext → $(notes_setup_command "$HOUSE" "$WORK")"
         else
           fail "notes: $(notes_dir_rel "$HOUSE" "$WORK")/ is not encrypted → $(notes_setup_command "$HOUSE" "$WORK")"
         fi

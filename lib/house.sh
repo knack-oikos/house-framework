@@ -325,9 +325,17 @@ notes_dir_rel() {
   if [ "$house" = "$work" ]; then printf 'notes\n'; else printf '%s/notes\n' "${house#"$work"/}"; fi
 }
 
-notes_encrypted() {
+notes_attribute_set() {
   local house="$1" work="$2"
   grep -F "$(notes_dir_rel "$house" "$work")/**" "$work/.gitattributes" 2>/dev/null | grep -q 'filter=git-crypt'
+}
+
+notes_key_present() {
+  [ -d "$1/.git-crypt/keys/default" ]
+}
+
+notes_encrypted() {
+  notes_attribute_set "$1" "$2" && notes_key_present "$2"
 }
 
 notes_setup_command() {

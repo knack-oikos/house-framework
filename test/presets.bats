@@ -87,8 +87,14 @@ pin_version() {
   assert_output_contains "fail: notes: hall/notes/ is not encrypted → cd $project && notes setup --gpg-key <fingerprint> --dir hall/notes"
   printf 'hall/notes/** filter=git-crypt diff=git-crypt\n' > "$project/.gitattributes"
   run house doctor --house "$project/hall"
+  assert_failure
+  assert_output_contains "fail: notes: hall/notes/** has the git-crypt filter line but no key under .git-crypt/keys/default"
+  mkdir -p "$project/.git-crypt/keys/default/0"
+  run house doctor --house "$project/hall"
   assert_success
-  assert_output_contains "ok:   notes: hall/notes/** is encrypted in .gitattributes"
+  assert_output_contains "ok:   notes: hall/notes/** is encrypted: filter in .gitattributes, key under .git-crypt/keys/default"
+  run in_house "$project/hall" welcome
+  assert_output_contains "hall/notes/: encrypted (git-crypt)"
 }
 
 @test "--with shimmer wires agent:list to the roster minus the housekeeper and leaves agent-env as the identity" {
@@ -139,8 +145,16 @@ pin_version() {
   assert_output_contains "doctor: 1 failing"
   printf 'notes/** filter=git-crypt diff=git-crypt\n' > "$h/.gitattributes"
   run house doctor --house "$h"
+  assert_failure
+  assert_output_contains "fail: notes: notes/** has the git-crypt filter line but no key under .git-crypt/keys/default, so git commits it in plaintext → cd $h && notes setup --gpg-key <fingerprint>"
+  run in_house "$h" welcome
+  assert_output_contains "notes/: plaintext → cd $h && notes setup"
+  mkdir -p "$h/.git-crypt/keys/default/0"
+  run house doctor --house "$h"
   assert_success
-  assert_output_contains "ok:   notes: notes/** is encrypted in .gitattributes"
+  assert_output_contains "ok:   notes: notes/** is encrypted: filter in .gitattributes, key under .git-crypt/keys/default"
+  run in_house "$h" welcome
+  assert_output_contains "notes/: encrypted (git-crypt)"
 }
 
 @test "doctor fails a floating pin, a missing plugin line, and a broken agent:list" {
@@ -162,6 +176,7 @@ pin_version() {
   h="$BATS_TEST_TMPDIR/hearth"
   house init hearth --at "$h" --with notes
   printf 'notes/** filter=git-crypt diff=git-crypt\n' > "$h/.gitattributes"
+  mkdir -p "$h/.git-crypt/keys/default/0"
   run env MISE_DATA_DIR="$BATS_TEST_TMPDIR/mise-data" bash -c 'house "$@"' _ doctor --house "$h"
   assert_success
   assert_output_contains "warn: shiv:notes $(pin_version notes): not installed → mise -C $h install"
