@@ -55,7 +55,7 @@ render() {
   for kv in "$@"; do
     key="${kv%%=*}"
     value="${kv#*=}"
-    content="${content//"{{$key}}"/$value}"
+    content="${content//"{{$key}}"/"$value"}"
   done
   mkdir -p "$(dirname "$dest")"
   printf '%s' "$content" > "$dest"
@@ -68,7 +68,7 @@ render_string() {
   for kv in "$@"; do
     key="${kv%%=*}"
     value="${kv#*=}"
-    content="${content//"{{$key}}"/$value}"
+    content="${content//"{{$key}}"/"$value"}"
   done
   printf '%s' "$content"
 }
