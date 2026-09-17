@@ -46,9 +46,9 @@ pin_version() {
   ! grep -q '\[plugins\]' "$h/mise.toml"
   ! grep -q 'packages' "$h/.mise/tasks/welcome"
   assert_file_contains "$h/AGENTS.md" "**Notes are plaintext here.**"
-  assert_file_contains "$h/notes/household-backlog.md" '### Encrypt `notes/` with git-crypt'
+  assert_file_contains "$h/notes/household-backlog.md" "house:decide: the first changes this house wants"
   assert_file_contains "$h/README.md" "shared notes, plaintext. Identity"
-  assert_file_contains "$h/README.md" 'Compared with oikos: no git-crypt on `notes/`, no per-agent GitHub identity'
+  assert_file_contains "$h/README.md" 'Not here yet: no git-crypt on `notes/`, no per-agent GitHub identity'
   [ ! -e "$h/.mise/tasks/agent" ]
   [ ! -e "$h/test/notes.bats" ]
   run in_house "$h" welcome
@@ -66,9 +66,9 @@ pin_version() {
   assert_file_contains "$h/AGENTS.md" "None granted yet."
   ! grep -q "Notes are plaintext here" "$h/AGENTS.md"
   ! grep -q '### Encrypt `notes/` with git-crypt' "$h/notes/household-backlog.md"
-  assert_file_contains "$h/notes/household-backlog.md" "### Give each builder and judge its own GitHub identity"
+  assert_file_contains "$h/notes/household-backlog.md" "house:decide: the first changes this house wants"
   assert_file_contains "$h/README.md" 'encrypted with git-crypt through `notes`'
-  assert_file_contains "$h/README.md" "Compared with oikos: no per-agent GitHub identity"
+  assert_file_contains "$h/README.md" "Not here yet: no per-agent GitHub identity"
   [ ! -e "$h/.mise/tasks/agent" ]
   [ ! -e "$h/test/shimmer.bats" ]
 }
@@ -77,6 +77,7 @@ pin_version() {
   project="$(make_project)"
   run house init hall --at "$project/hall" --embedded --with notes
   assert_success
+  make_theirs "$project/hall"
   assert_output_contains "next: cd $project && notes setup --gpg-key <fingerprint> --dir hall/notes"
   assert_file_contains "$project/hall/AGENTS.md" "--dir hall/notes"
   run in_house "$project/hall" welcome
@@ -101,6 +102,7 @@ pin_version() {
   h="$BATS_TEST_TMPDIR/hearth"
   house init hearth --at "$h" --with shimmer
   house agent add vulcan --house "$h" --role backend --owns server/ >/dev/null
+  assert_file_contains "$h/AGENTS.md" '`[[ABORT]]` on its own line'
   house agent add argus --house "$h" --role review >/dev/null
   run in_house "$h" agent:list
   assert_success
@@ -135,6 +137,7 @@ pin_version() {
 @test "doctor checks a declared package: the plugin, the exact pin, and the wiring" {
   h="$BATS_TEST_TMPDIR/hearth"
   house init hearth --at "$h" --with notes,shimmer
+  make_theirs "$h"
   run house doctor --house "$h"
   assert_failure
   assert_output_contains "ok:   mise.toml declares the shiv plugin"
@@ -175,6 +178,7 @@ pin_version() {
 @test "doctor warns about a declared package that is not installed and never installs it" {
   h="$BATS_TEST_TMPDIR/hearth"
   house init hearth --at "$h" --with notes
+  make_theirs "$h"
   printf 'notes/** filter=git-crypt diff=git-crypt\n' > "$h/.gitattributes"
   mkdir -p "$h/.git-crypt/keys/default/0"
   run env MISE_DATA_DIR="$BATS_TEST_TMPDIR/mise-data" bash -c 'house "$@"' _ doctor --house "$h"

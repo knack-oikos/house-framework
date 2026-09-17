@@ -114,7 +114,7 @@ setup() {
   run in_house "$H" agent-env vulcan
   assert_success
   assert_output_contains "export GIT_AUTHOR_NAME=vulcan"
-  assert_output_contains "export GIT_AUTHOR_EMAIL=vulcan@hearth.local"
+  assert_output_contains "export GIT_AUTHOR_EMAIL=vulcan@hearth.invalid"
 
   run env -u HEARTH_OWNER_COMMIT GIT_AUTHOR_NAME=argus "$H/hooks/agent-identity"
   assert_success

@@ -23,15 +23,15 @@ Owns `{{WORK_PATH}}/{{OWNS}}`. {{CHARGE}}
 
 ## Identity, as of {{CREATED}}
 
-- `GIT_AUTHOR_NAME={{AGENT}}`, `GIT_AUTHOR_EMAIL={{AGENT}}@{{HOUSE_NAME}}.local` —
-  a local author, not a GitHub account. Set by `mise run agent-env {{AGENT}}`
-  from `{{HOUSE_PATH}}`.
+- `GIT_AUTHOR_NAME={{AGENT}}`, `GIT_AUTHOR_EMAIL={{AGENT}}@{{AUTHOR_DOMAIN}}` —
+  a git author label, not a mailbox and not a GitHub account. Set by
+  `mise run agent-env {{AGENT}}` from `{{HOUSE_PATH}}`.
 - No GitHub account, no signing key, no mail. Pushes and PRs go through the
   owner's `gh` login and say so in the PR body.
 - Home: `{{HOME_PATH}}/` — local git repo, no remote.
 
 ## Stance
 
-The owner writes this section when {{AGENT}} first wakes: what the work is
-judged on, what the stack is, and which of the house's rule sets is the spec.
-Until then, the contract's house rules are the whole stance.
+<!-- house:decide: what {{AGENT}} is judged on, what the stack is, and which
+of the house's rule sets is the spec. The owner writes this before {{AGENT}}
+first wakes; until then the contract is the whole stance. -->

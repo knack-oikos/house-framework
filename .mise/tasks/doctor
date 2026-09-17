@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Check a house against the framework's invariants"
+#MISE description="Check a house against the framework's invariants, and for anything in it that is still the framework's rather than the owner's"
 #USAGE flag "--house <path>" help="The house directory; defaults to the current directory"
 set -euo pipefail
 
@@ -46,6 +46,7 @@ fi
 
 count=0
 keepers=0
+homes=()
 while IFS= read -r agent; do
   count=$((count + 1))
   kind="$(roster_kind "$HOUSE" "$agent")"
@@ -56,7 +57,7 @@ while IFS= read -r agent; do
   fi
   if [ -f "$HOUSE/notes/$agent.md" ]; then ok "$agent: notes/$agent.md"; else fail "$agent: notes/$agent.md missing"; fi
   if grep -q "^- \*\*$agent\*\* — " "$HOUSE/AGENTS.md"; then ok "$agent: on the roster in AGENTS.md"; else fail "$agent: not listed under 'Who lives here' in AGENTS.md"; fi
-  if [ -f "$home/AGENTS.md" ]; then ok "$agent: home at $(display_path "$home")"; else warn "$agent: no home at $(display_path "$home")"; fi
+  if [ -f "$home/AGENTS.md" ]; then ok "$agent: home at $(display_path "$home")"; homes+=("$home"); else warn "$agent: no home at $(display_path "$home")"; fi
 done < <(roster_agents "$HOUSE")
 [ "$count" -gt 0 ] || warn "roster is empty → house agent add <name> --role <role>"
 [ "$keepers" -le 1 ] || fail "roster lists $keepers housekeepers; a house has exactly one"
@@ -98,9 +99,38 @@ if [ -n "$pins" ]; then
 fi
 
 say ""
+theirs=0
+hits() {
+  grep -rn "$@" --exclude-dir=.git -- "$HOUSE" "${homes[@]}" 2>/dev/null || true
+}
+report() {
+  local kind="$1" line file rest
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    file="${line%%:*}"
+    rest="${line#*:}"
+    case "$file" in "$HOUSE"/*) file="${file#"$HOUSE"/}" ;; *) file="$(display_path "$file")" ;; esac
+    fail "$kind: $file:$rest"
+    theirs=$((theirs + 1))
+  done
+}
+report decide < <(hits -F 'house:decide' | sed 's/^\([^:]*:[0-9]*:\).*<!-- *house:decide: */\1/; s/ *-->.*$//')
+report placeholder < <(hits -oE '\{\{[A-Z_]+\}\}')
+report stance < <(grep -rn -F 'The owner writes this section' -- "$HOUSE/notes" 2>/dev/null | sed 's/:[^:]*$/: unwritten/' || true)
+lineage="$(lineage_names "$HOUSE" | paste -sd '|')"
+report lineage < <(hits -iwE "$lineage")
+if [ -z "$pins" ]; then
+  report lineage < <(hits -iwE 'KnickKnackLabs|Knick Knack Labs' --exclude=mise.toml)
+fi
+if [ "$theirs" -eq 0 ]; then
+  ok "the house is the owner's: no house:decide marker, no {{placeholder}}, no unwritten Stance, no lineage name"
+fi
+
+say ""
 if [ "$FAILS" -eq 0 ]; then
   say "doctor: healthy"
 else
   say "doctor: $FAILS failing"
+  [ "$theirs" -eq 0 ] || say "next: each decide:, placeholder:, stance: and lineage: line is the owner's to answer in the text around it; the house is healthy once nothing in it is still the framework's"
   exit 1
 fi

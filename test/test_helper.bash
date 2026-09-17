@@ -90,3 +90,13 @@ assert_file_contains() {
     return 1
   }
 }
+
+make_theirs() {
+  local file
+  while IFS= read -r file; do
+    awk '/<!-- house:decide/ { skip = 1 } !skip { print } skip && /-->/ { skip = 0 }' "$file" > "$file.decided"
+    cat "$file.decided" > "$file"
+    rm "$file.decided"
+  done < <(grep -rl 'house:decide' --exclude-dir=.git "$1")
+}
+export -f make_theirs

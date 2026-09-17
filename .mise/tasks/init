@@ -4,13 +4,14 @@
 #USAGE flag "--at <path>" help="Where to create it; defaults to ./<name>"
 #USAGE flag "--embedded" help="The house is a directory inside an existing project repo, not a repo of its own"
 #USAGE flag "--project <project>" help="What the household works on; defaults to the parent repo's name when embedded, else the house name"
-#USAGE flag "--owner <owner>" help="The owner's name as it appears in the record; defaults to git user.name"
+#USAGE flag "--owner <owner>" help="The owner's name as it appears in the contract; defaults to git user.name, and to a house:decide marker when that is unset"
+#USAGE flag "--style <name>" help="Render a style another household wrote as notes/house-style.md, wired to Read-first: oikos"
 #USAGE flag "--no-housekeeper" help="Do not add the housekeeper agent"
 #USAGE flag "--no-commit" help="Leave the generated files uncommitted"
 #USAGE flag "--with <presets>" help="Comma-separated Knick Knack Labs packages to declare and wire: notes, shimmer"
 #USAGE example "house init agora --at ~/Work/ticket/agora --embedded" header="A house inside the project it works on"
-#USAGE example "house init oikos --at ~/Work/oikos" header="A standalone house that works on other repos"
-#USAGE example "house init oikos --at ~/Work/oikos --with notes,shimmer" header="The same house on encrypted notes and shimmer"
+#USAGE example "house init oikos --at ~/Work/oikos --owner 'Olavo'" header="A standalone house that works on other repos"
+#USAGE example "house init oikos --at ~/Work/oikos --with notes,shimmer --style oikos" header="The same house on encrypted notes and shimmer, with the practice oikos wrote"
 set -euo pipefail
 
 source "$MISE_CONFIG_ROOT/lib/house.sh"
@@ -19,10 +20,29 @@ NAME="${usage_name:?a house name is required}"
 validate_name "house name" "$NAME"
 UPPER="$(upper_env "$NAME")"
 EMBEDDED="${usage_embedded:-false}"
-OWNER="${usage_owner:-$(git config user.name 2>/dev/null || true)}"
-OWNER="${OWNER:-the owner}"
 AGENTS_ROOT="${HOUSE_AGENTS_ROOT:-$HOME/agents}"
 PRESETS="$(parse_presets "${usage_with:-}")"
+STYLE="${usage_style:-}"
+if [ -n "$STYLE" ]; then
+  style_names | grep -qx "$STYLE" || die "unknown style: $STYLE (known: $(style_names | tr '\n' ' '))"
+fi
+
+OWNER="${usage_owner:-$(git config user.name 2>/dev/null || true)}"
+if [ -n "$OWNER" ]; then
+  OWNER_CLAUSE="The owner is **$OWNER**: the one human here, who files the queue, merges, and alone widens a rule."
+else
+  OWNER_CLAUSE="<!-- house:decide: who the owner is — the one human here, who files the queue, merges, and alone widens a rule. Name them here. -->"
+fi
+
+if [ -n "$STYLE" ]; then
+  STYLE_CLAUSE="House style is [[house-style]]: read it before you commit, review, open a PR or end a session. It is the owner's, and it is practice, not authority."
+  STYLE_ROW='| commit, review, open a PR, or end a session | [`notes/house-style.md`](notes/house-style.md) |'$'\n'
+else
+  STYLE_CLAUSE='<!-- house:decide: house style. How this house merges (merge, squash or rebase), sizes a PR, reviews, comments, and leaves a session is the owner'"'"'s to write: as notes/house-style.md with its own row in Read-first, or by starting from a style another household wrote (house init --style <name>). Until then there is none, which is a fact and not a gap. -->'
+  STYLE_ROW=""
+fi
+
+AUTHOR_DOMAIN="$NAME.invalid"
 
 TARGET="$(resolve_path "${usage_at:-$NAME}")"
 TARGET="$(canonical_path "$TARGET")"
@@ -33,7 +53,7 @@ if [ "$EMBEDDED" = "true" ]; then
   [ -n "$WORK" ] || die "--embedded needs the parent of $TARGET to be inside a git repository"
   PROJECT="${usage_project:-$(basename "$WORK")}"
   WORK_DIR_EXPR='{{ config_root }}/..'
-  PLACEMENT="This household lives **inside** the project it works on: \`$(display_path "$TARGET")\` is a directory of the \`$PROJECT\` repo, not a repo of its own. Home and work share one git history, so the branch rules below bind both."
+  PLACEMENT="This household lives **inside** the project it works on: \`$(display_path "$TARGET")\` is a directory of the \`$PROJECT\` repo, not a repo of its own. Home and work share one git history, so the rules below bind both."
 else
   WORK="$TARGET"
   PROJECT="${usage_project:-$NAME}"
@@ -50,7 +70,6 @@ else
 fi
 
 SHARED_NOTES="$(cat "$HOUSE_TEMPLATES/fragments/shared-notes.plaintext.md")"
-NOTES_SEED="$(cat "$HOUSE_TEMPLATES/fragments/backlog-seed.notes.md")"$'\n\n'
 NOTES_STATE="plaintext"
 NOTES_REL="$(notes_dir_rel "$TARGET" "$WORK")"
 NOTES_SETUP="$(notes_setup_command "$TARGET" "$WORK")"
@@ -72,7 +91,6 @@ fi
 case " $PRESETS " in
   *" notes "*)
     SHARED_NOTES="$(cat "$HOUSE_PRESETS/notes/shared-notes.md")"
-    NOTES_SEED=""
     NOTES_STATE='encrypted with git-crypt through `notes`, once the owner has run `notes setup`'
     NOT_YET='no per-agent GitHub identity or signing key, no mail,
 no chat, no CI wake-ups'
@@ -81,7 +99,6 @@ esac
 
 VARS=(
   "SHARED_NOTES=$SHARED_NOTES"
-  "NOTES_SEED=$NOTES_SEED"
   "TOOLING_PRESETS=$TOOLING_PRESETS"
   "PRESET_WELCOME=$PRESET_WELCOME"
   "NOTES_STATE=$NOTES_STATE"
@@ -93,12 +110,15 @@ VARS=(
   "HOUSEKEEPER=$HOUSEKEEPER"
   "HOUSE_NAME=$NAME"
   "HOUSEKEEPER_CLAUSE=$HOUSEKEEPER_CLAUSE"
+  "OWNER_CLAUSE=$OWNER_CLAUSE"
+  "STYLE_CLAUSE=$STYLE_CLAUSE"
+  "STYLE_ROW=$STYLE_ROW"
+  "AUTHOR_DOMAIN=$AUTHOR_DOMAIN"
   "HOUSE_UPPER=$UPPER"
   "HOUSE_PATH=$(display_path "$TARGET")"
   "WORK_PATH=$(display_path "$WORK")"
   "WORK_DIR_EXPR=$WORK_DIR_EXPR"
   "PROJECT=$PROJECT"
-  "OWNER=$OWNER"
   "PLACEMENT=$PLACEMENT"
   "CREATED=$(today)"
 )
@@ -119,6 +139,14 @@ for preset in $PRESETS; do
     install_tree "$HOUSE_PRESETS/$preset/house" "$TARGET" "${VARS[@]}"
   fi
 done
+if [ -n "$STYLE" ]; then
+  if [ -e "$TARGET/notes/house-style.md" ]; then
+    say "keep: notes/house-style.md"
+  else
+    render "$HOUSE_TEMPLATES/style/$STYLE.md" "$TARGET/notes/house-style.md" "${VARS[@]}"
+    say "create: notes/house-style.md (style: $STYLE)"
+  fi
+fi
 
 mise trust "$TARGET/mise.toml" >/dev/null
 
@@ -133,7 +161,7 @@ elif [ "$NEW_REPO" = "true" ] && [ -z "$PREEXISTING" ]; then
     say "sign: the bootstrap commit is signed ($signing); a passphrase prompt that appears now is for it. --no-commit leaves the files for the owner to commit instead"
   fi
   git -C "$TARGET" add .
-  env "${UPPER}_OWNER_COMMIT=1" git -C "$TARGET" commit -q -m "$NAME: bootstrap the household from house-framework"
+  env "${UPPER}_OWNER_COMMIT=1" git -C "$TARGET" commit -q -m "$NAME: bootstrap the household from house-framework${STYLE:+, with the $STYLE style}"
   say "commit: bootstrap the household"
 else
   say "next: review the new files under $(display_path "$TARGET") and commit them as the owner"
@@ -141,6 +169,7 @@ fi
 
 say ""
 say "done: $NAME at $(display_path "$TARGET") (work tree: $(display_path "$WORK"))"
+say "next: house doctor --house $(display_path "$TARGET") names every house:decide marker: each is a question only the owner can answer, and the house is healthy once each is answered and the marker deleted"
 say "next: house agent add <name> --house $(display_path "$TARGET") --role '<role>' [--owns <dir>/]"
 say "next: cd $(display_path "$TARGET") && mise run install-hooks && mise run welcome"
 say "next: house export claude-code --house $(display_path "$TARGET") if the agents run under Claude Code"

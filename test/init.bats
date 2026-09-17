@@ -175,7 +175,7 @@ load test_helper
   assert_file_contains "$h/AGENTS.md" "The exception is **housekeeper**, the house's own voice"
   assert_file_contains "$h/AGENTS.md" "The housekeeper is"
   assert_file_contains "$h/AGENTS.md" "its workspace is the house's own: \`~/agents/hearth/\`"
-  assert_file_contains "$h/notes/household-backlog.md" "The housekeeper is not in this entry"
+  assert_file_contains "$h/AGENTS.md" "The housekeeper is excluded from any such entry"
   assert_file_contains "$h/notes/housekeeper.md" "No GitHub account, no signing key, no mail — by design"
   assert_file_contains "$h/notes/housekeeper.md" "$AGENTS_ROOT/hearth/home/"
   [ ! -e "$AGENTS_ROOT/housekeeper" ]
