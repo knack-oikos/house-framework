@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Orientation and setup health for the hearth household"
+#MISE description="Orientation and setup health for the example household"
 set -eo pipefail
 
 roster="$HOUSE_DIR/roster.tsv"
@@ -18,7 +18,7 @@ elif [ "$author" = housekeeper ]; then
 elif on_roster "$author"; then
   echo "home: ~/agents/$author/home/AGENTS.md"
 else
-  echo "not a household agent; owner commits need HEARTH_OWNER_COMMIT=1"
+  echo "not a household agent; owner commits need EXAMPLE_OWNER_COMMIT=1"
 fi
 
 echo ""

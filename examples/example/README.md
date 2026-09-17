@@ -1,6 +1,6 @@
-# hearth
+# example
 
-Home base for the agents of **hearth**. Part contract, part notebook,
+Home base for the agents of **example**. Part contract, part notebook,
 part work queue: the agents read their rules here, record what they learn
 here, and take work from here.
 
@@ -19,7 +19,7 @@ addressed to one agent, and that agent takes it from the top.
 ## Usage
 
 ```bash
-cd ~/Work/hearth
+cd ~/Work/example
 mise run welcome                       # orientation and setup health
 mise run test                          # household checks
 mise run install-hooks                 # commit guard for the work tree
@@ -60,7 +60,7 @@ When they are signed, expect three things:
   `max-cache-ttl` there, or a pinentry backed by the login keyring, stops
   it; both are machine setup, outside the house.
 
-To stop signing for this repository alone: `git -C ~/Work/hearth config
+To stop signing for this repository alone: `git -C ~/Work/example config
 commit.gpgsign false`, in the owner's own turn. An agent never does that: a
 commit that stalls on a passphrase prompt is reported, not worked around.
 

@@ -4,25 +4,25 @@ setup() {
 }
 
 @test "refuses an unset author" {
-  run env -u GIT_AUTHOR_NAME -u HEARTH_OWNER_COMMIT "$HOOK"
+  run env -u GIT_AUTHOR_NAME -u EXAMPLE_OWNER_COMMIT "$HOOK"
   [ "$status" -eq 1 ]
   [[ "$output" == *"refusing this commit"* ]]
 }
 
 @test "refuses the owner without the escape hatch" {
-  run env -u HEARTH_OWNER_COMMIT GIT_AUTHOR_NAME=someone-else "$HOOK"
+  run env -u EXAMPLE_OWNER_COMMIT GIT_AUTHOR_NAME=someone-else "$HOOK"
   [ "$status" -eq 1 ]
 }
 
 @test "accepts every agent on the roster" {
   while IFS= read -r name; do
-    run env -u HEARTH_OWNER_COMMIT GIT_AUTHOR_NAME="$name" "$HOOK"
+    run env -u EXAMPLE_OWNER_COMMIT GIT_AUTHOR_NAME="$name" "$HOOK"
     [ "$status" -eq 0 ]
   done < <(awk -F '\t' '!/^#/ && NF { print $1 }' "$ROSTER")
 }
 
-@test "accepts the owner with HEARTH_OWNER_COMMIT=1" {
-  run env GIT_AUTHOR_NAME=someone-else HEARTH_OWNER_COMMIT=1 "$HOOK"
+@test "accepts the owner with EXAMPLE_OWNER_COMMIT=1" {
+  run env GIT_AUTHOR_NAME=someone-else EXAMPLE_OWNER_COMMIT=1 "$HOOK"
   [ "$status" -eq 0 ]
 }
 
@@ -30,7 +30,7 @@ setup() {
   tmp="$BATS_TEST_TMPDIR/house"
   mkdir -p "$tmp/hooks"
   cp "$HOOK" "$tmp/hooks/agent-identity"
-  run env -u HEARTH_OWNER_COMMIT -u HOUSE_DIR GIT_AUTHOR_NAME=anyone "$tmp/hooks/agent-identity"
+  run env -u EXAMPLE_OWNER_COMMIT -u HOUSE_DIR GIT_AUTHOR_NAME=anyone "$tmp/hooks/agent-identity"
   [ "$status" -eq 1 ]
   [[ "$output" == *"roster not found"* ]]
 }

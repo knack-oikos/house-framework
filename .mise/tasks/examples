@@ -24,22 +24,18 @@ example() {
     MISE_TRUSTED_CONFIG_PATHS="$HOUSE_REPO_DIR:$home" \
     MISE_AUTO_INSTALL=0 \
     HOUSE_AGENTS_ROOT="$home/agents" \
-    HOUSE_DEFINITIONS_DIR="$home/.claude/agents" \
     HOUSE_TODAY=2026-01-01 \
     GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
     GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.name GIT_CONFIG_VALUE_0= \
     mise run -q "$task" "$@" >/dev/null
 }
 
-house="$home/Work/hearth"
-example init hearth --at "$house" --no-commit
-example agent:add vulcan --house "$house" --role backend --owns server/ \
-  --charge 'Owns the schema, the domain model and the API.'
-example agent:add argus --house "$house" --role 'review and security' \
-  --charge 'Reads every pull request into main before the owner merges it.'
-example rules:add review --house "$house" --binds argus
+house="$home/Work/example"
+example init example --at "$house" --no-commit
+example agent:add builder --house "$house" --role implementation --owns src/ \
+  --charge 'Builds what the queue asks for, under `src/`.' --no-home
 find "$home" -type d -name .git -prune -exec rm -rf {} +
-mv "$house" "$fresh/hearth"
+mv "$house" "$fresh/example"
 mv "$home/agents" "$fresh/agents"
 
 if [ "$WRITE" = "true" ]; then

@@ -5,11 +5,11 @@ load test_helper
   assert_success
   assert_output_contains "matches a fresh render"
   cp -R "$REPO_DIR/examples" "$BATS_TEST_TMPDIR/examples"
-  printf 'drift\n' >> "$BATS_TEST_TMPDIR/examples/hearth/README.md"
-  rm "$BATS_TEST_TMPDIR/examples/agents/vulcan/home/SCRATCHPAD.md"
+  printf 'drift\n' >> "$BATS_TEST_TMPDIR/examples/example/README.md"
+  rm "$BATS_TEST_TMPDIR/examples/agents/example/home/SCRATCHPAD.md"
   run env HOUSE_EXAMPLES_DIR="$BATS_TEST_TMPDIR/examples" bash -c 'house "$@"' _ examples
   assert_failure
-  assert_output_contains "hearth/README.md"
+  assert_output_contains "example/README.md"
   assert_output_contains "Only in"
   assert_output_contains "SCRATCHPAD.md"
   assert_output_contains "has drifted from the templates"
@@ -17,24 +17,28 @@ load test_helper
   [ -z "$(ls -A "$AGENTS_ROOT")" ]
 }
 
-@test "examples --write renders into the given directory with fixed paths and dates, and touches nothing real" {
+@test "examples --write renders one house and one home with fixed paths and dates, names no harness, and touches nothing real" {
   run env HOUSE_EXAMPLES_DIR="$BATS_TEST_TMPDIR/examples" bash -c 'house "$@"' _ examples --write
   assert_success
   assert_output_contains "write: $BATS_TEST_TMPDIR/examples is a fresh render of the templates"
   e="$BATS_TEST_TMPDIR/examples"
-  for f in hearth/AGENTS.md hearth/README.md hearth/roster.tsv hearth/hooks/agent-identity hearth/notes/vulcan.md \
-           agents/hearth/home/AGENTS.md agents/vulcan/home/AGENTS.md agents/argus/home/AGENTS.md; do
+  for f in example/AGENTS.md example/README.md example/roster.tsv example/hooks/agent-identity \
+           example/notes/housekeeper.md example/notes/builder.md agents/example/home/AGENTS.md; do
     [ -f "$e/$f" ]
   done
-  [ -x "$e/hearth/hooks/agent-identity" ]
-  [ ! -e "$e/hearth/.git" ]
-  [ ! -e "$e/agents/vulcan/home/.git" ]
-  assert_file_contains "$e/hearth/AGENTS.md" '`~/Work/hearth` is a single shared checkout'
-  assert_file_contains "$e/hearth/AGENTS.md" "house:decide: who the owner is"
-  assert_file_contains "$e/hearth/AGENTS.md" "### Review rules"
-  assert_file_contains "$e/hearth/notes/housekeeper.md" "created: 2026-01-01"
-  assert_file_contains "$e/agents/vulcan/home/AGENTS.md" "~/agents/vulcan/home"
+  [ "$(ls "$e")" = $'agents\nexample' ]
+  [ "$(ls "$e/agents")" = "example" ]
+  [ -x "$e/example/hooks/agent-identity" ]
+  [ ! -e "$e/example/.git" ]
+  [ ! -e "$e/agents/example/home/.git" ]
+  grep -q $'^builder\timplementation\tsrc/\tbuilder$' "$e/example/roster.tsv"
+  assert_file_contains "$e/example/AGENTS.md" '`~/Work/example` is a single shared checkout'
+  assert_file_contains "$e/example/AGENTS.md" "house:decide: who the owner is"
+  assert_file_contains "$e/example/notes/housekeeper.md" "created: 2026-01-01"
+  assert_file_contains "$e/agents/example/home/AGENTS.md" "~/agents/example/home"
   ! grep -rq '{{[A-Z_]*}}' "$e"
+  ! grep -rqi 'claude' "$e" "$REPO_DIR/.mise/tasks/examples"
+  ! grep -rqi 'claude' "$REPO_DIR/examples"
   [ -z "$(ls -A "$AGENTS_ROOT")" ]
   [ -z "$(ls -A "$DEFINITIONS_DIR")" ]
   run env HOUSE_EXAMPLES_DIR="$e" bash -c 'house "$@"' _ examples

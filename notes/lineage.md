@@ -177,8 +177,8 @@ moved, and where to:
   author label is `<name>@<house>.invalid`: a reserved name that belongs to
   nobody, so the house claims nothing it does not own.
 - **Runner and toolchain words.** "The Bash tool starts a fresh shell per
-  call" is Claude Code's Bash tool, stated in the contract, the guard and
-  every home as a property of the world; it now reads "a runner may start a
+  call" is one runner's tool, stated in the contract, the guard and every
+  home as a property of the world; it now reads "a runner may start a
   fresh shell for every command". `[[ABORT]]` is shimmer's CI-wake
   convention and lives only in the shimmer preset's Tooling bullet. The
   `bats` pin stays, for the reason under *Dropped* above, and is the only
