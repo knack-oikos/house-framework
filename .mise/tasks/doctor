@@ -62,6 +62,41 @@ done < <(roster_agents "$HOUSE")
 [ "$keepers" -le 1 ] || fail "roster lists $keepers housekeepers; a house has exactly one"
 [ "$keepers" -eq 1 ] || warn "no housekeeper → house agent add $HOUSEKEEPER"
 
+pins="$(house_shiv_pins "$HOUSE")"
+if [ -n "$pins" ]; then
+  say ""
+  if grep -qx '\[plugins\]' "$HOUSE/mise.toml" && grep -qx 'shiv = "https://github.com/KnickKnackLabs/vfox-shiv"' "$HOUSE/mise.toml"; then
+    ok "mise.toml declares the shiv plugin"
+  else
+    fail "mise.toml pins a shiv package without [plugins] shiv = \"https://github.com/KnickKnackLabs/vfox-shiv\""
+  fi
+  while IFS=$'\t' read -r pkg version; do
+    if exact_version "$version"; then ok "shiv:$pkg $version: exact pin"; else fail "shiv:$pkg $version: a range, not a release; pin the exact version (vfox-shiv#36 deadlocks on a floating range)"; fi
+    if package_installed "$HOUSE" "$pkg" "$version"; then ok "shiv:$pkg $version: installed"; else warn "shiv:$pkg $version: not installed → mise -C $(display_path "$HOUSE") install"; fi
+    case "$pkg" in
+      notes)
+        if notes_encrypted "$HOUSE" "$WORK"; then
+          ok "notes: $(notes_dir_rel "$HOUSE" "$WORK")/** is encrypted: filter in .gitattributes, key under .git-crypt/keys/default"
+        elif notes_attribute_set "$HOUSE" "$WORK"; then
+          fail "notes: $(notes_dir_rel "$HOUSE" "$WORK")/** has the git-crypt filter line but no key under .git-crypt/keys/default, so git commits it in plaintext → $(notes_setup_command "$HOUSE" "$WORK")"
+        else
+          fail "notes: $(notes_dir_rel "$HOUSE" "$WORK")/ is not encrypted → $(notes_setup_command "$HOUSE" "$WORK")"
+        fi
+        ;;
+      shimmer)
+        list="$HOUSE/.mise/tasks/agent/list"
+        if [ ! -x "$list" ]; then
+          fail "shimmer: .mise/tasks/agent/list missing or not executable; shimmer reads the roster through it"
+        elif [ "$(HOUSE_DIR="$HOUSE" "$list")" = "$(agent_list_expected "$HOUSE")" ]; then
+          ok "shimmer: agent:list prints the roster minus the housekeeper"
+        else
+          fail "shimmer: agent:list does not print the roster minus the housekeeper"
+        fi
+        ;;
+    esac
+  done <<< "$pins"
+fi
+
 say ""
 if [ "$FAILS" -eq 0 ]; then
   say "doctor: healthy"

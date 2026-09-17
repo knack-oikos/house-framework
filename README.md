@@ -55,6 +55,9 @@ house init agora --at ~/Work/ticket/agora --embedded
 # A house that is a repo of its own and works on other repos
 house init oikos --at ~/Work/oikos
 
+# The same, on encrypted notes and shimmer (exact shiv pins, opt-in)
+house init oikos --at ~/Work/oikos --with notes,shimmer
+
 cd ~/Work/ticket/agora
 house agent add caesar --role payments --owns payments/ \
   --charge 'Takes money for tickets, refunds it, reconciles it, reports on it.'
@@ -83,9 +86,20 @@ house export claude-code
 | `.mise/tasks/{welcome,test,agent-env,install-hooks}` | the task surface |
 | `test/*.bats` | the house's own checks, roster-driven so they stay true as agents join |
 | `mise.toml`, `README.md`, `.gitignore` | the rest |
+| `--with notes,shimmer` | opt-in: each named package as an exact `shiv:` pin plus `[plugins] shiv`, its wiring (`agent:list` for shimmer), its bats file, and the contract, README and backlog rewritten where the package makes them false; without the flag nothing changes |
 
 A standalone house gets its own repo and a bootstrap commit. An embedded
 house is a directory of the project repo; you commit it as the owner.
+
+A preset never overwrites a file that exists, and these two never widen the
+contract (a preset for a channel such as chat or mail would, as a dated
+loosening row under the owner's name):
+`notes` declares the package and rewrites the shared-notes clause, but the
+encryption itself is `notes setup --gpg-key <fingerprint>`, the owner's
+step, which `init` names and `house doctor` fails without. `shimmer` is
+declared and fed the roster through `agent:list`; `agent-env` stays the
+identity, because `shimmer as` reads its token through a desktop keyring
+and a house must not depend on one. `secrets` has no preset by that rule.
 
 If your git config signs commits, `init` says so and names the key before
 the passphrase prompt can appear, and `--no-commit` avoids it. Every house's

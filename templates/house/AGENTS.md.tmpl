@@ -256,10 +256,7 @@ owner's.
 `notes/` holds knowledge useful across agents. Your identity file lives at
 `notes/<your-name>.md`.
 
-**Notes are plaintext here.** Write nothing into `notes/` that would be a
-problem in a public repo — no keys, no customer data, no account numbers.
-Encrypting the corpus with git-crypt, as oikos does, is filed in
-[[household-backlog]] and is the owner's to switch on.
+{{SHARED_NOTES}}
 
 Notes use YAML frontmatter (title, tags, related, created, updated) and
 `[[wikilinks]]` for cross-referencing.
@@ -288,7 +285,7 @@ its workspace is the house's own: `~/agents/{{HOUSE_NAME}}/`. The
 - **mise** — the household's task surface. `mise run welcome` for
   orientation, `mise run test` for the household's own checks, `mise run
   agent-env <name>` to activate an identity.
-- **gh** — the owner's login, used as transport. No agent has a GitHub
+{{TOOLING_PRESETS}}- **gh** — the owner's login, used as transport. No agent has a GitHub
   identity of its own yet; every push and PR goes through the owner's
   credentials and says so in the PR body. Giving the builders and judges
   their own accounts is filed in [[household-backlog]]. The housekeeper is

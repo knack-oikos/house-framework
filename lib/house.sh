@@ -3,6 +3,7 @@
 HOUSE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOUSE_REPO_DIR="$(cd "$HOUSE_LIB_DIR/.." && pwd)"
 HOUSE_TEMPLATES="$HOUSE_REPO_DIR/templates"
+HOUSE_PRESETS="$HOUSE_TEMPLATES/preset"
 HOUSEKEEPER=housekeeper
 
 say() { printf '%s\n' "$*"; }
@@ -55,7 +56,7 @@ render() {
   for kv in "$@"; do
     key="${kv%%=*}"
     value="${kv#*=}"
-    content="${content//"{{$key}}"/$value}"
+    content="${content//"{{$key}}"/"$value"}"
   done
   mkdir -p "$(dirname "$dest")"
   printf '%s' "$content" > "$dest"
@@ -68,7 +69,7 @@ render_string() {
   for kv in "$@"; do
     key="${kv%%=*}"
     value="${kv#*=}"
-    content="${content//"{{$key}}"/$value}"
+    content="${content//"{{$key}}"/"$value"}"
   done
   printf '%s' "$content"
 }
@@ -283,4 +284,66 @@ add_agent() {
       say "create: $(display_path "$home_dir") (AGENTS.md, mise.toml, SCRATCHPAD.md; local repo, no remote)"
     fi
   fi
+}
+
+preset_names() {
+  local dir
+  for dir in "$HOUSE_PRESETS"/*/; do
+    basename "$dir"
+  done
+}
+
+parse_presets() {
+  local asked known name out=""
+  asked=" $(printf '%s' "$1" | tr ',' ' ') "
+  known="$(preset_names)"
+  for name in $asked; do
+    printf '%s\n' "$known" | grep -qx "$name" \
+      || die "unknown preset: $name (known: $(printf '%s' "$known" | tr '\n' ' '))"
+  done
+  while IFS= read -r name; do
+    case "$asked" in *" $name "*) out="$out $name" ;; esac
+  done <<< "$known"
+  printf '%s\n' "${out# }"
+}
+
+house_shiv_pins() {
+  sed -n 's/^"shiv:\([^"]*\)" = "\([^"]*\)".*$/\1\t\2/p' "$1/mise.toml"
+}
+
+exact_version() {
+  [[ "$1" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+([.+-][A-Za-z0-9.]+)?$ ]]
+}
+
+package_installed() {
+  local house="$1" pkg="$2" version="$3"
+  mise -C "$house" where "shiv:$pkg@$version" >/dev/null 2>&1
+}
+
+notes_dir_rel() {
+  local house="$1" work="$2"
+  if [ "$house" = "$work" ]; then printf 'notes\n'; else printf '%s/notes\n' "${house#"$work"/}"; fi
+}
+
+notes_attribute_set() {
+  local house="$1" work="$2"
+  grep -F "$(notes_dir_rel "$house" "$work")/**" "$work/.gitattributes" 2>/dev/null | grep -q 'filter=git-crypt'
+}
+
+notes_key_present() {
+  [ -d "$1/.git-crypt/keys/default" ]
+}
+
+notes_encrypted() {
+  notes_attribute_set "$1" "$2" && notes_key_present "$2"
+}
+
+notes_setup_command() {
+  local house="$1" work="$2" cmd="notes setup --gpg-key <fingerprint>"
+  [ "$house" = "$work" ] || cmd="$cmd --dir $(notes_dir_rel "$house" "$work")"
+  printf 'cd %s && %s\n' "$(display_path "$work")" "$cmd"
+}
+
+agent_list_expected() {
+  roster_agents "$1" | grep -vx "$HOUSEKEEPER" || true
 }
