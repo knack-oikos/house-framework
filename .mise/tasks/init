@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 #MISE description="Scaffold a household: contract, roster, queue, guard, and tasks"
-#USAGE arg "<name>" help="Household name, lowercase (for example: agora)"
+#USAGE arg "<name>" help="Household name, lowercase (for example: example)"
 #USAGE flag "--at <path>" help="Where to create it; defaults to ./<name>"
 #USAGE flag "--embedded" help="The house is a directory inside an existing project repo, not a repo of its own"
 #USAGE flag "--project <project>" help="What the household works on; defaults to the parent repo's name when embedded, else the house name"
 #USAGE flag "--owner <owner>" help="The owner's name as it appears in the contract; defaults to git user.name, and to a house:decide marker when that is unset"
-#USAGE flag "--style <name>" help="Render a style another household wrote as notes/house-style.md, wired to Read-first: oikos"
+#USAGE flag "--style <name>" help="Render a house style as notes/house-style.md, wired to Read-first: strict"
 #USAGE flag "--no-housekeeper" help="Do not add the housekeeper agent"
 #USAGE flag "--no-commit" help="Leave the generated files uncommitted"
 #USAGE flag "--with <presets>" help="Comma-separated Knick Knack Labs packages to declare and wire: notes, shimmer"
-#USAGE example "house init agora --at ~/Work/ticket/agora --embedded" header="A house inside the project it works on"
-#USAGE example "house init oikos --at ~/Work/oikos --owner 'Olavo'" header="A standalone house that works on other repos"
-#USAGE example "house init oikos --at ~/Work/oikos --with notes,shimmer --style oikos" header="The same house on encrypted notes and shimmer, with the practice oikos wrote"
+#USAGE example "house init example --at ~/project/example --embedded" header="A house inside the project it works on"
+#USAGE example "house init example --at ~/example --owner 'Your Name'" header="A standalone house that works on other repos"
+#USAGE example "house init example --at ~/example --with notes,shimmer --style strict" header="The same house on encrypted notes and shimmer, with the strict style"
 set -euo pipefail
 
 source "$MISE_CONFIG_ROOT/lib/house.sh"

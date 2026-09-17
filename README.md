@@ -3,45 +3,38 @@
 **The starting point of a house of agents.**
 
 A *house* is a directory where a roster of agents wake, read their rules,
-take work from a queue, and return. `house-framework` scaffolds one, adds
-agents to it, drops in domain rule sets, and checks it against the shape
-every house shares. The command is `house`.
+take work from a queue, and return. `house init` gives you one: a contract
+that says what an agent may do without asking and what only you decide, a
+roster, a work queue, a commit guard that refuses an author who is not on
+the roster, a housekeeper that keeps the record true, and a set of checks.
+`house agent add` puts an agent on it, `house rules add` drops in a domain
+rule set, and `house doctor` measures the house against the shape every
+house shares. The command is `house`.
+
+house-framework is a public tool for people who have never heard of the
+households it grew out of. It names them in one place, as history:
+[`notes/lineage.md`](notes/lineage.md), which says what was kept, dropped,
+and why.
 
 A house does not depend on any agent harness. Everything it generates is
-markdown, bash, git and `mise`; a runner such as Claude Code gets its agent
-definitions from a separate `house export <harness>` step that reads the
-roster and can be re-run or ignored.
+markdown, bash, git and `mise`; a runner gets its agent definitions from a
+separate `house export <harness>` step that reads the roster and can be
+re-run or ignored.
 
-It distils three generations of the same idea:
-
-- [ricon-family/fold](https://github.com/ricon-family/fold) — the original
-  home base, built on the
-  [Knick Knack Labs](https://github.com/KnickKnackLabs) toolchain: `shiv`,
-  `shimmer`, `notes`, `chat`, `emails`, `sessions`.
-- [olavostauros/oikos](https://github.com/olavostauros/oikos) — fold forked
-  for one household: the tiers, the loosenings table, the two-key rule, the
-  refusal of relayed approval, encrypted notes, a work queue.
-- `agora` (in `olavostauros/ticket`) — oikos stripped to what a house needs
-  on day one: a contract, a roster, a queue, a commit guard, plaintext
-  notes, the owner's login as transport, and rule sets for money, identity,
-  data and review.
-
-Every house starts at the agora tier, and starts empty: the shape is the
-lineage's, the words are the owner's. `init` renders the authority model
-whole and leaves every question it cannot answer for the owner — what the
-house is, who owns it, how the owner merges, the house style, the first
-backlog entries — as a `<!-- house:decide: … -->` marker, and `house doctor`
-fails until the owner has answered each one. Each oikos capability —
-encryption, per-agent GitHub identity, mail, chat, CI wakes — is the owner's
-to file and switch on, and a dated widening in the contract when they do.
-See [`notes/lineage.md`](notes/lineage.md) for what was kept, dropped, and
-why.
+A house starts small, and starts empty: the shape is the framework's, the
+words are yours. `init` renders the authority model whole and leaves every
+question it cannot answer for you — what the house is, who owns it, how you
+merge, the house style, the first backlog entries — as a
+`<!-- house:decide: … -->` marker, and `house doctor` fails until you have
+answered each one. Each larger capability — encrypted notes, per-agent
+accounts and keys, mail, chat, CI wakes — is yours to file and switch on,
+and a dated widening in the contract when you do.
 
 ## Install
 
 ```bash
-gh repo clone olavostauros/house-framework ~/Work/house-framework
-cd ~/Work/house-framework && mise trust && mise install
+gh repo clone olavostauros/house-framework
+cd house-framework && mise trust && mise install
 ```
 
 Run it as `mise run <task>` from this directory, or register it as a
@@ -49,38 +42,38 @@ Run it as `mise run <task>` from this directory, or register it as a
 from anywhere:
 
 ```bash
-shiv install house ~/Work/house-framework
+shiv install house "$PWD"
 ```
 
 ## Quick start
 
 ```bash
 # A house inside the project it works on
-house init agora --at ~/Work/ticket/agora --embedded
+house init example --at ~/project/example --embedded
 
 # A house that is a repo of its own and works on other repos
-house init oikos --at ~/Work/oikos --owner 'Olavo'
+house init example --at ~/example --owner 'Your Name'
 
 # The same, on encrypted notes and shimmer (exact shiv pins, opt-in)
-house init oikos --at ~/Work/oikos --with notes,shimmer
+house init example --at ~/example --with notes,shimmer
 
-# The same, with the practice oikos wrote rendered as notes/house-style.md
-house init oikos --at ~/Work/oikos --style oikos
+# The same, with the strict style rendered as notes/house-style.md
+house init example --at ~/example --style strict
 
-cd ~/Work/ticket/agora
-house agent add caesar --role payments --owns payments/ \
-  --charge 'Takes money for tickets, refunds it, reconciles it, reports on it.'
-house agent add argus --role 'review and security' \
+cd ~/project/example
+house agent add builder --role implementation --owns src/ \
+  --charge 'Builds what the queue asks for, under src/.'
+house agent add judge --role review \
   --charge 'Reads every pull request into main before the owner merges it.'
-house rules add money --binds caesar
-house rules add review --binds argus
+house rules add data --binds builder
+house rules add review --binds judge
 
 mise run install-hooks
 mise run welcome
 house doctor            # fails, naming each house:decide marker, until the house is yours
 
-# Only if the agents run under Claude Code
-house export claude-code
+# Only if the agents run under a harness that has an exporter
+house export <harness>
 ```
 
 ## What `init` writes
@@ -96,7 +89,7 @@ house export claude-code
 | `test/*.bats` | the house's own checks, roster-driven so they stay true as agents join |
 | `mise.toml`, `README.md`, `.gitignore` | the rest; the README carries the one line of attribution a house keeps, `Started from house-framework on <date>` |
 | `--owner <name>` | who the owner is, in the contract; defaults to git `user.name`, and to a marker when that is unset |
-| `--style <name>` | opt-in: the practice one household wrote — review, merge, comment, PR size, what a session leaves behind — as `notes/house-style.md`, wired to Read-first and named in the bootstrap commit. `oikos` is the one that ships. Without it the contract asks the owner for a style and has none |
+| `--style <name>` | opt-in: a house style — review, merge, comment, PR size, what a session leaves behind — as `notes/house-style.md`, wired to Read-first and named in the bootstrap commit. `strict` is the one that ships: small branches, merges that keep history, nothing unpushed or undocumented. Without it the contract asks the owner for a style and has none |
 | `--with notes,shimmer` | opt-in: each named package as an exact `shiv:` pin plus `[plugins] shiv`, its wiring (`agent:list` for shimmer), its bats file, and the contract, README and backlog rewritten where the package makes them false; without the flag nothing changes |
 
 A standalone house gets its own repo and a bootstrap commit, which is where
@@ -107,19 +100,20 @@ repo; you commit it as the owner.
 
 A fresh house is not `healthy`, on purpose. `house doctor` fails on every
 `<!-- house:decide: … -->` marker, every leftover `{{KEY}}`, every agent
-Stance the owner has not written, and every lineage name — `oikos`,
-`agora`, `fold`, and `KnickKnackLabs` outside a tool pin unless a preset
-declared the package — each with its file and line. Answer each marker in
-the text around it and delete the comment; write each agent's Stance in
-`notes/<name>.md`; then `doctor` reports `healthy`. The house's own name and
-project are never counted as lineage, so a house called `agora` passes.
+Stance the owner has not written, and every name of a household the
+framework grew out of (the list is `lib/lineage-names`; `KnickKnackLabs`
+outside a tool pin is added unless a preset declared the package) — each
+with its file and line. Answer each marker in the text around it and delete
+the comment; write each agent's Stance in `notes/<name>.md`; then `doctor`
+reports `healthy`. The house's own name and project are never counted, so a
+house that happens to share a name with one of those passes.
 
 What `init` produces, before any of that, is [`examples/`](examples/): a
-standalone house named `example` at `~/Work/example` with the housekeeper
-and one added agent, `builder`, plus the housekeeper's home under
-`~/agents/example/`. It is regenerated by `mise run examples --write` and compared
-with a fresh render by `mise run test`, so the table above is checked, not
-described.
+standalone house named `example` at `~/example` with the housekeeper and
+one added agent, `builder`, plus the housekeeper's home under
+`~/agents/example/`. It is regenerated by `mise run examples --write` and
+compared with a fresh render by `mise run test`, so the table above is
+checked, not described.
 
 A preset never overwrites a file that exists, and these two never widen the
 contract (a preset for a channel such as chat or mail would, as a dated
@@ -183,9 +177,10 @@ Nothing above knows which runner the agents wake under. When one is in use,
 `house export <harness>` projects the roster into that runner's agent
 definitions, one per roster agent, mapping each kind to the tool set it
 should have there. Exporters live under `templates/harness/<name>/` with a
-matching `.mise/tasks/export/<name>` task; the first is `claude-code`,
-which writes `~/.claude/agents/<name>.md` (`HOUSE_DEFINITIONS_DIR` or
-`--to` override the directory).
+matching `.mise/tasks/export/<name>` task, and are the only place a runner
+is named; the first is `claude-code`, which writes
+`~/.claude/agents/<name>.md` (`HOUSE_DEFINITIONS_DIR` or `--to` override the
+directory).
 
 An export keeps a definition that already exists unless `--force`. The
 house contract makes every definition Tier 2, so the export is the owner's

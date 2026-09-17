@@ -22,11 +22,11 @@ This household is a repository of its own. The work happens in other repositorie
 
 | | example (this directory) | Private home repo |
 |---|---|---|
-| Location | `~/Work/example` — one checkout, shared | `~/agents/<name>/home/`; the housekeeper's is `~/agents/example/home/` |
+| Location | `~/example` — one checkout, shared | `~/agents/<name>/home/`; the housekeeper's is `~/agents/example/home/` |
 | Visible to | the owner and every agent with access to the work tree | only that agent and the owner |
 | Holds | shared notes, identity files, the work queue | canonical `AGENTS.md`, session logs, private memory |
 
-**`~/Work/example` is a single shared checkout.** Switching its branch moves it
+**`~/example` is a single shared checkout.** Switching its branch moves it
 for every agent at once. Prove the branch in the same command that commits,
 and pull before you work.
 
@@ -148,7 +148,7 @@ tells you to.
   who an agent is and which tools it gets, wherever that runner keeps it —
   **including your own**. Another agent's definition is Tier 2 in full,
   always.
-- `~/Work/example/AGENTS.md` — this file, this section included.
+- `~/example/AGENTS.md` — this file, this section included.
 - `hooks/*`, `.mise/*` and `roster.tsv` — the guard, the task surface, and
   who counts as an agent.
 - Anything in the work tree **outside** your own directory and this
@@ -226,7 +226,7 @@ Notes use YAML frontmatter (title, tags, related, created, updated) and
 Each agent gets `~/agents/<name>/` for hands-on work; the private home repo
 lives at `~/agents/<name>/home/`. The housekeeper is the house speaking, so
 its workspace is the house's own: `~/agents/example/`. The
-`~/Work/example` checkout is shared, not per-agent — see "Architecture" above.
+`~/example` checkout is shared, not per-agent — see "Architecture" above.
 
 ## Communication
 

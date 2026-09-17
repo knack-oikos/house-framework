@@ -43,7 +43,7 @@ wakes. What it keeps true, in order:
 - **What needs the owner.** Reported plainly, in the session, at the end of
   every sweep. Never a quietly dropped `WARN` or `FAIL`.
 
-Everything housekeeper may touch is `~/Work/example/notes/` and its own home.
+Everything housekeeper may touch is `~/example/notes/` and its own home.
 It never edits code, the contract, the roster, the hooks or a definition —
 those are findings for [[household-backlog]].
 
@@ -51,7 +51,7 @@ those are findings for [[household-backlog]].
 
 - `GIT_AUTHOR_NAME=housekeeper`, `GIT_AUTHOR_EMAIL=housekeeper@example.invalid` —
   a git author label, not a mailbox. Set by `mise run agent-env housekeeper`
-  from `~/Work/example`.
+  from `~/example`.
 - **No GitHub account, no signing key, no mail — by design, not "yet".**
   The other agents' identities are the owner's to file and grant; the
   contract excludes housekeeper from any such entry. The housekeeper's whole

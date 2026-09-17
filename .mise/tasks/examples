@@ -30,7 +30,7 @@ example() {
     mise run -q "$task" "$@" >/dev/null
 }
 
-house="$home/Work/example"
+house="$home/example"
 example init example --at "$house" --no-commit
 example agent:add builder --house "$house" --role implementation --owns src/ \
   --charge 'Builds what the queue asks for, under `src/`.' --no-home

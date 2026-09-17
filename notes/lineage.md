@@ -50,7 +50,7 @@ model as the invariant, and makes both generate.
 | oikos | the tiers, the two-key rule, the loosenings table, Tier 3's refusal rule | each one is the fix for a recorded failure |
 | oikos | "the contract is authority-only", "enumerated only here", "narrowing is yours, widening is the owner's" | satellite copies went stale twice and silently cancelled grants |
 | oikos | the pre-commit identity guard with an owner-only escape hatch | 36 misattributed commits before it existed |
-| oikos | three git rules in the contract — own your commits, prove the tree in the command that writes, stage by explicit path — and the rest of its practice as `templates/style/oikos.md` | the three protect the guard and the shared checkout, which every house has; the rest is taste with a dated near-miss behind it, and a new house takes it only by asking (`--style oikos`) |
+| oikos | three git rules in the contract — own your commits, prove the tree in the command that writes, stage by explicit path — and the rest of its practice as `templates/style/strict.md` | the three protect the guard and the shared checkout, which every house has; the rest is taste with a dated near-miss behind it, and a new house takes it only by asking (`--style strict`, the style's name being the practice, not the house) |
 | agora | the embedded placement, directory ownership, the owner files the queue, no agent merges, the seam rule (interface one owns, call site another owns) | the smallest form that still separates authority from work |
 | agora | `agent-env` instead of `shimmer as`, plaintext notes, the owner as transport | a house should wake on day one with `git`, `mise` and `bats` only |
 | agora | the four rule sets | they are what turned a style guide into a contract |
@@ -81,8 +81,8 @@ model as the invariant, and makes both generate.
   no worked examples. Until 2026-09-17 it also carried the house-rules block
   fold wrote and agora kept — sixteen bold headings from *Push back* to
   *Clean up before you leave* — as if it were part of the contract; that is
-  now `templates/style/oikos.md`, rendered as `notes/house-style.md` only by
-  `house init --style oikos`. A house writes its own notes as it earns them
+  now `templates/style/strict.md`, rendered as `notes/house-style.md` only by
+  `house init --style strict`. A house writes its own notes as it earns them
   and wires each to the Read-first table.
 - **Discord, Bluesky, mail, chat mirror.** Each is a channel oikos granted
   in the owner's turn. The template's Communication section says how such a
@@ -166,7 +166,7 @@ moved, and where to:
   three that protect the guard and the shared checkout stay in the
   contract, phrased without naming a runner: own your commits, prove the
   tree in the command that writes, stage by explicit path. The rest is
-  `templates/style/oikos.md`, a note the owner asks for with `--style`.
+  `templates/style/strict.md`, a note the owner asks for with `--style`.
 - **The lineage's answers where the owner's go.** The two backlog seeds
   were oikos's upgrade path; the mail domain `<house>.local` was the
   `OIKOS_EMAIL_DOMAIN` idea in a house with no mail; "Compared with oikos"

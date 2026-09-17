@@ -77,18 +77,20 @@ setup() {
 
 @test "doctor fails a lineage name, but not the house's own name, a tool pin, or a package a preset declared" {
   make_theirs "$H"
-  printf 'as oikos does, and as Fold did\n' >> "$H/notes/work-queue.md"
+  first="$(awk '$1 == "house" { print $2; exit }' "$REPO_DIR/lib/lineage-names")"
+  last="$(awk '$1 == "house" { name = $2 } END { print name }' "$REPO_DIR/lib/lineage-names")"
+  printf 'as %s does, and as %s did\n' "$first" "${last^}" >> "$H/notes/work-queue.md"
   run house doctor --house "$H"
   assert_failure
-  assert_output_contains "fail: lineage: notes/work-queue.md:$(wc -l < "$H/notes/work-queue.md"):as oikos does, and as Fold did"
+  assert_output_contains "fail: lineage: notes/work-queue.md:$(wc -l < "$H/notes/work-queue.md"):as $first does, and as ${last^} did"
   assert_output_contains "doctor: 1 failing"
   ! [[ "$output" == *"fail: lineage: mise.toml"* ]]
   printf 'read KnickKnackLabs/notes\n' >> "$H/notes/work-queue.md"
   run house doctor --house "$H"
   assert_output_contains "fail: lineage: notes/work-queue.md:$(wc -l < "$H/notes/work-queue.md"):read KnickKnackLabs/notes"
 
-  a="$BATS_TEST_TMPDIR/agora"
-  house init agora --at "$a" --project "the Agora" >/dev/null
+  a="$BATS_TEST_TMPDIR/$first"
+  house init "$first" --at "$a" --project "the ${first^}" >/dev/null
   make_theirs "$a"
   run house doctor --house "$a"
   assert_success

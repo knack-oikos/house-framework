@@ -9,10 +9,12 @@ updated: {{CREATED}}
 # House style
 
 How this house prefers its work done. Practice, not authority: the contract
-says what an agent may do, this note says how the house likes it done. It
-was rendered at the owner's request from a style another household wrote
-and is the owner's to change; an agent that thinks a line here is wrong
-files against it in [[household-backlog]] rather than editing it.
+says what an agent may do, this note says how the house likes it done. This
+is the strict style — small reviewable branches, merges that keep history,
+failures said out loud, nothing left unpushed or undocumented — rendered at
+the owner's request and the owner's to change; an agent that thinks a line
+here is wrong files against it in [[household-backlog]] rather than editing
+it.
 
 **Push back when something smells off.** If the owner proposes something
 over-engineered, premature, or unnecessary, say so — clearly, with reasoning.

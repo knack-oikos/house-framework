@@ -1,6 +1,27 @@
 load test_helper
 
-LINEAGE='oikos|agora|fold|KnickKnackLabs|Knick Knack Labs|Bash tool|\[\[ABORT\]\]'
+listed_names() {
+  awk -v kind="${1:-}" 'kind == "" || $1 == kind { print $2 }' "$REPO_DIR/lib/lineage-names" | paste -sd '|'
+}
+
+setup() {
+  export CALLER="$BATS_TEST_TMPDIR/caller"
+  export AGENTS_ROOT="$BATS_TEST_TMPDIR/agents"
+  export DEFINITIONS_DIR="$BATS_TEST_TMPDIR/definitions"
+  export MISE_TRUSTED_CONFIG_PATHS="$BATS_TEST_TMPDIR"
+  export GIT_AUTHOR_NAME="house test"
+  export GIT_AUTHOR_EMAIL="house-test@example.invalid"
+  export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+  export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+  mkdir -p "$CALLER" "$AGENTS_ROOT" "$DEFINITIONS_DIR"
+  LINEAGE="$(listed_names)|KnickKnackLabs|Knick Knack Labs|Bash tool|\[\[ABORT\]\]"
+}
+
+@test "the framework ships no household or personal name outside notes/lineage.md and lib/lineage-names" {
+  run bash -c "grep -rniwE '$(listed_names)' --exclude-dir=.git --exclude=lineage.md --exclude=lineage-names '$REPO_DIR' | grep -v 'olavostauros/house-framework'"
+  [ -z "$output" ]
+  [ "$(awk '$1 == "house"' "$REPO_DIR/lib/lineage-names" | wc -l)" -ge 1 ]
+}
 
 @test "a fresh house names no lineage, no runner and no mail domain, and keeps one line of attribution" {
   h="$BATS_TEST_TMPDIR/hearth"
@@ -8,8 +29,8 @@ LINEAGE='oikos|agora|fold|KnickKnackLabs|Knick Knack Labs|Bash tool|\[\[ABORT\]\
   house agent add vulcan --house "$h" --role backend --owns server/ >/dev/null
   house agent add argus --house "$h" --role review >/dev/null
   house rules add money --house "$h" --binds vulcan >/dev/null
-  run grep -rniwE "$LINEAGE" --exclude-dir=.git --exclude=mise.toml "$h" "$AGENTS_ROOT"
-  [ "$status" -eq 1 ]
+  run bash -c "grep -rniwE '$LINEAGE' --exclude-dir=.git --exclude=mise.toml '$h' '$AGENTS_ROOT' | grep -v 'olavostauros/house-framework'"
+  [ -z "$output" ]
   run grep -niwE "$LINEAGE" "$h/mise.toml"
   [ "$output" = $'14:"aqua:KnickKnackLabs/bats-core" = "1.14.0-kkl.3"\n17:registries = ["https://github.com/KnickKnackLabs/bats-core"]' ]
   run grep -rnE '@[^[:space:]`]*\.local' --exclude-dir=.git "$h" "$AGENTS_ROOT"
@@ -45,11 +66,11 @@ Notes are plaintext here."
   [ ! -e "$h/notes/house-style.md" ]
 }
 
-@test "init --style oikos renders the style as a note wired to Read-first and names it in the bootstrap commit" {
+@test "init --style strict renders the style as a note wired to Read-first and names it in the bootstrap commit" {
   h="$BATS_TEST_TMPDIR/hearth"
-  run house init hearth --at "$h" --style oikos
+  run house init hearth --at "$h" --style strict
   assert_success
-  assert_output_contains "create: notes/house-style.md (style: oikos)"
+  assert_output_contains "create: notes/house-style.md (style: strict)"
   assert_file_contains "$h/notes/house-style.md" "title: house-style"
   assert_file_contains "$h/notes/house-style.md" "**Merge, don't squash.**"
   assert_file_contains "$h/notes/house-style.md" "**Push back when something smells off.**"
@@ -59,10 +80,10 @@ Notes are plaintext here."
   assert_file_contains "$h/AGENTS.md" '| commit, review, open a PR, or end a session | [`notes/house-style.md`](notes/house-style.md) |'
   ! grep -q 'house:decide: house style' "$h/AGENTS.md"
   ! grep -q "Merge, don't squash" "$h/AGENTS.md"
-  [ "$(git -C "$h" log -1 --format=%s)" = "hearth: bootstrap the household from house-framework, with the oikos style" ]
-  run house init hall --at "$BATS_TEST_TMPDIR/hall" --style fold
+  [ "$(git -C "$h" log -1 --format=%s)" = "hearth: bootstrap the household from house-framework, with the strict style" ]
+  run house init hall --at "$BATS_TEST_TMPDIR/hall" --style loose
   assert_failure
-  assert_output_contains "unknown style: fold (known: oikos"
+  assert_output_contains "unknown style: loose (known: strict"
   [ ! -e "$BATS_TEST_TMPDIR/hall/AGENTS.md" ]
 }
 

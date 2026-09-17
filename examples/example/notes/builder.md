@@ -12,7 +12,7 @@ The implementation agent of example.
 
 ## Role
 
-Owns `~/Work/example/src/`. Builds what the queue asks for, under `src/`.
+Owns `~/example/src/`. Builds what the queue asks for, under `src/`.
 
 - Takes the top `queued` entry addressed to builder in [[work-queue]]; does
   not self-assign, and does not take another agent's entries.
@@ -25,7 +25,7 @@ Owns `~/Work/example/src/`. Builds what the queue asks for, under `src/`.
 
 - `GIT_AUTHOR_NAME=builder`, `GIT_AUTHOR_EMAIL=builder@example.invalid` —
   a git author label, not a mailbox and not a GitHub account. Set by
-  `mise run agent-env builder` from `~/Work/example`.
+  `mise run agent-env builder` from `~/example`.
 - No GitHub account, no signing key, no mail. Pushes and PRs go through the
   owner's `gh` login and say so in the PR body.
 - Home: `~/agents/builder/home/` — local git repo, no remote.

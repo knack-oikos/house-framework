@@ -303,9 +303,9 @@ style_names() {
 lineage_names() {
   local own name
   own=" $(house_name "$1") $(house_project "$1" | tr '[:upper:]' '[:lower:]') "
-  for name in oikos agora fold; do
+  while IFS= read -r name; do
     case "$own" in *" $name "*) ;; *) printf '%s\n' "$name" ;; esac
-  done
+  done < <(awk '$1 == "house" { print $2 }' "$HOUSE_LIB_DIR/lineage-names")
 }
 
 preset_names() {

@@ -32,7 +32,7 @@ load test_helper
   [ ! -e "$e/example/.git" ]
   [ ! -e "$e/agents/example/home/.git" ]
   grep -q $'^builder\timplementation\tsrc/\tbuilder$' "$e/example/roster.tsv"
-  assert_file_contains "$e/example/AGENTS.md" '`~/Work/example` is a single shared checkout'
+  assert_file_contains "$e/example/AGENTS.md" '`~/example` is a single shared checkout'
   assert_file_contains "$e/example/AGENTS.md" "house:decide: who the owner is"
   assert_file_contains "$e/example/notes/housekeeper.md" "created: 2026-01-01"
   assert_file_contains "$e/agents/example/home/AGENTS.md" "~/agents/example/home"

@@ -24,15 +24,27 @@ discipline applies here as in a live house:
   house is, how the owner merges, the house style, the first backlog
   entries, the agents' author domain, each agent's Stance — renders as a
   `<!-- house:decide: … -->` marker, and `doctor` fails on every marker,
-  every leftover `{{KEY}}` and every lineage name (`oikos`, `agora`,
-  `fold`; `KnickKnackLabs` unless a preset declared it) until the owner has
-  replaced them. No template answers one of those questions with a
+  every leftover `{{KEY}}` and every name a `house` line of
+  `lib/lineage-names` lists (`KnickKnackLabs` too, unless a preset declared
+  it) until the owner has replaced them. No template answers one of those questions with a
   lineage's answer, names a runner or its tools, or claims a mail domain.
   The one line of attribution a house keeps is its README's "Started from
   house-framework"; everything else about where the shape came from lives
   in this repo's README, `notes/lineage.md` and the bootstrap commit. The
-  practice a lineage wrote is `templates/style/<name>.md`, rendered as
+  practice a house may take up is `templates/style/<name>.md`, rendered as
   `notes/house-style.md` only by `house init --style <name>`.
+- **This is a tool for strangers.** house-framework is public and meant for
+  people who have never heard of the households it grew out of. Personal
+  names and lineage names — the owner's, and the houses `notes/lineage.md`
+  describes — appear in that note alone, as history, and in
+  `lib/lineage-names`, the list `doctor` reads to reject the house names in
+  a generated house. Usage examples, help text, templates, tests and
+  `examples/` use generic names (`example`, `builder`, `Your Name`) and
+  paths that mean the same on every machine. No harness is named outside
+  `templates/harness/` and `.mise/tasks/export/`. The repo-wide test in
+  `test/own_house.bats` greps every file but those two for every name on
+  the list and fails on any other mention; the one personal string it
+  allows is the address of this repository, which a house's README links.
 - **The housekeeper stays voiceless, singular and named.** Its templates
   (`agent/note.housekeeper`, `agent/home/AGENTS.housekeeper`, and each
   harness's `definition.housekeeper`) each state that it has no GitHub
@@ -85,8 +97,8 @@ git diff --check
   the same keep-what-exists rule as `templates/house/`. Its `doctor` check
   lives in `.mise/tasks/doctor`, keyed by package name.
 - A style is one file, `templates/style/<name>.md`, in the shape of a note
-  with frontmatter. It names no lineage inside; the bootstrap commit names
-  the style the owner asked for.
+  with frontmatter, named for the practice it carries and not for where it
+  came from; the bootstrap commit names the style the owner asked for.
 - A `house:decide` marker is one HTML comment, `<!-- house:decide: … -->`,
   in the owner's second person, saying what is undecided and where the
   answer goes. Nothing generated after `init` may depend on the marker
@@ -95,5 +107,5 @@ git diff --check
   `examples/` in the same change; the test task fails on drift.
 - Comments carry constraints, not narrative. No decorative separators.
 - Commit messages: conventional, no footers, no tool attribution.
-- When a template changes, say in the commit which of the three houses'
-  practice it came from (fold, oikos, agora) or that it is new.
+- When a template changes, say in the commit which house of the lineage
+  (`notes/lineage.md`) its practice came from, or that it is new.
