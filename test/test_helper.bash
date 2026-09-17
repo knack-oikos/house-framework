@@ -10,6 +10,7 @@ house() {
     HOUSE_DEFINITIONS_DIR="$DEFINITIONS_DIR" \
     GIT_CONFIG_GLOBAL=/dev/null \
     GIT_CONFIG_NOSYSTEM=1 \
+    MISE_AUTO_INSTALL=0 \
     mise run -q "$task" "$@"
 }
 export -f house
@@ -17,7 +18,7 @@ export -f house
 in_house() {
   local dir="$1"
   shift
-  env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 mise -C "$dir" run -q "$@"
+  env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 MISE_AUTO_INSTALL=0 mise -C "$dir" run -q "$@"
 }
 export -f in_house
 

@@ -34,7 +34,7 @@ eval "$(mise run -q agent-env <name>)" # become an agent, in the shell that comm
   agent may do without asking.
 - **`roster.tsv`** — who counts as an agent. Read by the guard, `agent-env`
   and `welcome`.
-- **`notes/`** — shared notes, plaintext. Identity in `<name>.md`, work in
+- **`notes/`** — shared notes, {{NOTES_STATE}}. Identity in `<name>.md`, work in
   `work-queue.md`, proposed changes to the household in
   `household-backlog.md`.
 - **`hooks/`** — `agent-identity`, the pre-commit guard.
@@ -67,7 +67,6 @@ commit that stalls on a passphrase prompt is reported, not worked around.
 
 ## What is deliberately not here yet
 
-Compared with oikos: no git-crypt on `notes/`, no per-agent GitHub identity
-or signing key, no mail, no chat, no CI wake-ups. Each is a
+Compared with oikos: {{NOT_YET}}. Each is a
 `notes/household-backlog.md` entry; the owner switches them on one at a
 time, and each becomes a dated widening in `AGENTS.md`.

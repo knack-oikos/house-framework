@@ -56,7 +56,7 @@ if [ "$(git -C "$WORK_DIR" config --type=bool commit.gpgsign 2>/dev/null)" = tru
 else
   echo "commits here: unsigned"
 fi
-
+{{PRESET_WELCOME}}
 echo ""
 echo "== work queue =="
 queue="$HOUSE_DIR/notes/work-queue.md"

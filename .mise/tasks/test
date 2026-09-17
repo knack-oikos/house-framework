@@ -7,7 +7,7 @@ printf '\n== bats ==\n'
 bats --print-output-on-failure test
 
 printf '\n== templates ==\n'
-for f in templates/house/hooks/agent-identity.tmpl templates/house/.mise/tasks/*.tmpl; do
+while IFS= read -r f; do
   bash -n "$f"
-done
+done < <(find templates -type f \( -path '*/.mise/tasks/*.tmpl' -o -path '*/hooks/*.tmpl' -o -name '*.sh' \) | sort)
 echo ok

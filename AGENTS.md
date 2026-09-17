@@ -33,6 +33,17 @@ discipline applies here as in a live house:
   a runner needs lives under `templates/harness/<name>/` and is written only
   by `.mise/tasks/export/<name>`. Do not let a harness path, tool name or
   settings file back into the contract, the notes, the homes or the library.
+- **A preset declares, wires, and widens only in the record.** `house init
+  --with <pkg>` renders the exact shiv pin and the `[plugins] shiv` line,
+  adds or swaps the task the package needs, and rewrites the passages of
+  the contract, the README and the backlog that the package makes false.
+  Nothing else. Every placeholder a preset fills is empty by default, so
+  `house init x` with no `--with` renders byte for byte what it did before
+  presets existed. A channel a package opens (chat, mail) is a dated
+  loosening row the preset writes under the owner's name, never a default,
+  and never one that names the housekeeper. No preset may make identity,
+  tokens or signing depend on a desktop keyring (`secrets`, libsecret,
+  gnome-keyring): `shimmer as` does, so the shimmer preset does not wire it.
 - **Generated files are never overwritten.** `install_tree`, `agent add` and
   every exporter keep what exists and say so (`export` takes `--force`). A
   change to a template reaches an existing house only by hand, in that
@@ -48,8 +59,14 @@ git diff --check
 - Templates render with `{{KEY}}` — uppercase, no spaces. mise's own
   `{{ config_root }}` and `{{ env.X }}` have spaces and pass through
   untouched; keep it that way.
-- Executable templates (`hooks/`, `.mise/tasks/`) must pass `bash -n`; the
-  test task runs it.
+- Executable templates (`hooks/`, `.mise/tasks/`, the `welcome.sh`
+  fragments) must pass `bash -n`; the test task runs it.
+- A preset is a directory under `templates/preset/<pkg>/`: `pin` (the exact
+  `"shiv:<pkg>" = "x.y.z"` line), `tooling.md` (its bullet in the contract),
+  `welcome.sh` (its lines under `== packages ==`), optional `next` (what
+  `init` prints for the owner) and an optional `house/` tree installed with
+  the same keep-what-exists rule as `templates/house/`. Its `doctor` check
+  lives in `.mise/tasks/doctor`, keyed by package name.
 - Comments carry constraints, not narrative. No decorative separators.
 - Commit messages: conventional, no footers, no tool attribution.
 - When a template changes, say in the commit which of the three houses'

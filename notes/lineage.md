@@ -2,7 +2,7 @@
 title: lineage
 tags: [design, history]
 created: 2026-09-16
-updated: 2026-09-16
+updated: 2026-09-17
 ---
 
 # Lineage
@@ -103,6 +103,22 @@ model as the invariant, and makes both generate.
   those made by `house export <harness>`, kept under `templates/harness/`.
   The contract now says "the definitions a harness reads" where it used to
   say a path.
+- **Presets.** Filed as the "oikos tier as a preset" item on 2026-09-16 and
+  built on 2026-09-17: `house init --with notes,shimmer` declares each
+  package with an exact shiv pin and the `[plugins] shiv` line, wires what
+  the package needs, and rewrites the record where the package makes it
+  false. The default is unchanged: no `--with`, one aqua tool. What the
+  build changed from the item as filed: `agent-env` is **not** swapped for
+  `shimmer as`, because `shimmer as` reads its token through `secrets` and
+  the desktop keyring, and the owner ruled on 2026-09-17 (after oikos lost
+  every agent credential to a shadowed keyring) that a house depends on
+  neither; the shimmer preset wires `agent:list` instead, so shimmer reads
+  the roster minus the housekeeper. `secrets` has no preset and will not
+  get one. `notes` cannot be switched on by `init` — encryption needs the
+  owner's key — so the preset declares, rewrites, and leaves `notes setup
+  --gpg-key` as the owner's step, with `house doctor` failing until it has
+  run. `chat`, `emails` (each needs the loosening row) and `tits` (which
+  of `agent add` and `tits` owns `~/agents/<name>/home`) are still open.
 
 ## Open
 
@@ -114,9 +130,6 @@ model as the invariant, and makes both generate.
 - **`house upgrade`.** When a template improves, reaching existing houses is
   by hand. A diff-and-propose task that files a backlog entry rather than
   editing the contract would fit the two-key rule.
-- **The oikos tier as a preset.** `house init --with notes,shimmer` could
-  declare the packages and swap `agent-env` for `shimmer as`. Not built
-  until a second house wants it.
 - **A second harness.** `export claude-code` is the only exporter. The
   shape — kind to tool set, roster to one file per agent, the housekeeper's
   file named after the house — is meant to be copied for the next runner;
