@@ -32,6 +32,11 @@ setup() {
   assert_file_contains "$DEFINITIONS_DIR/argus.md" "tools: Read, Grep, Glob, Bash, WebFetch, WebSearch"
   assert_file_contains "$DEFINITIONS_DIR/argus.md" "Judgement only"
 
+  for d in vulcan argus hearth; do
+    assert_file_contains "$DEFINITIONS_DIR/$d.md" "stalls on a passphrase prompt"
+    assert_file_contains "$DEFINITIONS_DIR/$d.md" "never to work around by turning signing off"
+  done
+
   ! grep -rq '{{' "$DEFINITIONS_DIR"
 }
 

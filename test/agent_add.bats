@@ -63,6 +63,7 @@ setup() {
   [ -d "$AGENTS_ROOT/vulcan/home/.git" ]
   assert_file_contains "$AGENTS_ROOT/vulcan/home/AGENTS.md" "You own"
   assert_file_contains "$AGENTS_ROOT/vulcan/home/AGENTS.md" "git switch -c vulcan/<short-topic>"
+  assert_file_contains "$AGENTS_ROOT/vulcan/home/AGENTS.md" "stalls on its passphrase prompt is reported, not"
 
   assert_file_contains "$AGENTS_ROOT/vulcan/home/AGENTS.md" "$AGENTS_ROOT/vulcan/home"
   [ -z "$(ls -A "$DEFINITIONS_DIR")" ]
@@ -77,6 +78,7 @@ setup() {
   grep -q $'^argus\treview and security\t\tjudge$' "$H/roster.tsv"
   assert_file_contains "$H/AGENTS.md" "- **argus** — review and security. Owns no directory."
   assert_file_contains "$AGENTS_ROOT/argus/home/AGENTS.md" "You own no"
+  assert_file_contains "$AGENTS_ROOT/argus/home/AGENTS.md" "stalls on its passphrase prompt is reported, not"
   assert_file_contains "$H/notes/argus.md" "Judgement, not patches"
 }
 

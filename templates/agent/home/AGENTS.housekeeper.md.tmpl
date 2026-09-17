@@ -34,7 +34,11 @@ push nothing. You speak to the owner in the session and nowhere else.
 1. Confirm identity: `echo $GIT_AUTHOR_NAME` must print `{{AGENT}}`. If not:
    `cd {{HOUSE_PATH}} && eval "$(mise run -q agent-env {{AGENT}})"` — in the
    same shell you will commit from. The Bash tool starts a fresh shell per
-   call, so re-run it before every commit.
+   call, so re-run it before every commit. `agent-env` sets the author
+   only: if the machine signs commits, yours is signed with the owner's
+   key, and a commit that stalls on its passphrase prompt is reported, not
+   worked around — never turn signing off, never set
+   `{{HOUSE_UPPER}}_OWNER_COMMIT`.
 2. Read the shared contract at `{{HOUSE_PATH}}/AGENTS.md`. The tiers govern
    you like everyone else; do not restate them.
 3. Read `{{HOUSE_PATH}}/notes/{{AGENT}}.md` for what you keep true and in

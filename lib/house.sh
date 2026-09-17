@@ -186,6 +186,19 @@ capitalize() {
   printf '%s' "$1" | sed 's/^./\U&/'
 }
 
+signing_describe() {
+  local dir="$1" format key
+  [ "$(git -C "$dir" config --type=bool commit.gpgsign 2>/dev/null)" = true ] || return 1
+  format="$(git -C "$dir" config gpg.format 2>/dev/null || printf openpgp)"
+  key="$(git -C "$dir" config user.signingkey 2>/dev/null || true)"
+  if [ -n "$key" ]; then
+    printf '%s, key %s\n' "$format" "$key"
+  else
+    printf '%s, no user.signingkey — picked by the committer identity %s\n' "$format" \
+      "$(git -C "$dir" var GIT_COMMITTER_IDENT | sed 's/ [0-9]* [-+][0-9]*$//')"
+  fi
+}
+
 add_agent() {
   local house="$1" name="$2" role="$3" owns="$4" charge="$5" kind="$6" no_home="$7"
   local house_name house_upper project work workspace home_dir roster_line
