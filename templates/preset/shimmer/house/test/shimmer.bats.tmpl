@@ -11,7 +11,7 @@ setup() {
 }
 
 @test "agent:list prints the roster minus the housekeeper" {
-  expected="$(awk -F '\t' '!/^#/ && NF && $1 != "housekeeper" { print $1 }' "$HOUSE/roster.tsv")"
+  expected="$(awk -F '\t' '!/^#/ && NF && $1 != "{{HOUSEKEEPER}}" { print $1 }' "$HOUSE/roster.tsv")"
   run mise run -q agent:list
   [ "$status" -eq 0 ]
   [ "$output" = "$expected" ]
