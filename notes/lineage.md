@@ -10,9 +10,12 @@ updated: 2026-09-17
 This note is house-framework's design history, written for a reader who has
 never seen any of the three households its templates were distilled from;
 nothing in it is needed to use the framework, and the households are named
-here and nowhere else in this repository. *The maintainer* below is the
-person who maintains this repository and owned all three households; *the
-owner* is the role a house's contract gives to whoever owns that house.
+here and in `lib/lineage-names`, the list the tests read to keep them out of
+everything else. *The maintainer* below is the person who maintains this
+repository, who owned two of the three households (oikos and agora) and
+forked oikos from the third, fold — another family's house, whose practice
+was borrowed; *the owner* is the role a house's contract gives to whoever
+owns that house.
 
 What house-framework kept from each of its three sources, what it dropped,
 and why. Read this before changing a template, so a rule is not removed
