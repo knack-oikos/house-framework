@@ -4,7 +4,7 @@
 #USAGE flag "--agent <name>" help="Export one agent instead of the whole roster"
 #USAGE flag "--to <dir>" help="Where the definitions go; defaults to HOUSE_DEFINITIONS_DIR or ~/.claude/agents"
 #USAGE flag "--force" help="Overwrite a definition that already exists"
-#USAGE example "house export claude-code --house ~/Work/ticket/agora" header="Every agent of a house"
+#USAGE example "house export claude-code --house ~/project/example" header="Every agent of a house"
 #USAGE example "house export claude-code --agent vulcan --force" header="Refresh one definition"
 set -euo pipefail
 

@@ -3,12 +3,9 @@
 Home base for the agents of **{{PROJECT}}**: where they wake, orient, and
 return after working in the world.
 
-This household was started from
-[house-framework](https://github.com/olavostauros/house-framework), which
-distils [olavostauros/oikos](https://github.com/olavostauros/oikos) and, behind
-it, [ricon-family/fold](https://github.com/ricon-family/fold). The shape is
-theirs; the household, the roster and the rules below are this one's. Nothing
-outside this directory governs here, and nothing here governs another house.
+<!-- house:decide: what this household is and why it exists, in the owner's
+words — one paragraph, here. Nothing outside this directory governs here, and
+nothing here governs another house. -->
 
 ## Purpose
 
@@ -35,16 +32,21 @@ and pull before you work.
 
 ## Who lives here
 
+{{OWNER_CLAUSE}}
+
 <!-- house:roster -->
 
 The roster is `roster.tsv`; the guard, `agent-env` and `welcome` read it, so
 an agent exists here only once it is on that file and in the list above.
 
 Builders work on topic branches and open pull requests into `main`. None
-merges; the owner does. None decides its own work: the owner files entries
-into [[work-queue]], each addressed to one agent, and that agent works from
-the top of its own entries. An agent does not take an entry addressed to
-another. {{HOUSEKEEPER_CLAUSE}}
+merges; the owner does. <!-- house:decide: how the owner merges — merge
+commit, squash or rebase — and whether branch history is the record. Say it
+here; the agents keep their branches the way this sentence asks. --> None
+decides its own work: the owner files entries into [[work-queue]], each
+addressed to one agent, and that agent works from the top of its own
+entries. An agent does not take an entry addressed to another.
+{{HOUSEKEEPER_CLAUSE}}
 
 Where two agents meet, the boundary is an interface one owns and a call site
 another owns. A change one needs from another is a queue entry the owner
@@ -80,74 +82,27 @@ command, but does not fetch, switch branches, or install hooks.
 
 ## House rules
 
-**Push back when something smells off.** If the owner proposes something
-over-engineered, premature, or unnecessary, say so — clearly, with reasoning.
-A good "I don't think we need this yet, here's why" is worth more than
-agreeable silence.
+Three rules protect the guard and the shared checkout, and they are all this
+contract says about how work is done. How this house reviews, merges, sizes
+a change, comments and leaves a session is style, not authority: it lives in
+a note wired to Read-first, and the owner writes it.
 
-**Never silently skip failures.** If a command, tool, or auth step fails, say
-so immediately. Observed failures are work: fix them, file them, or ask for
-help.
-
-**Plan before you act.** In interactive sessions, explain the plan first —
-what changes, why, and the risks. Wait for approval before writing code.
-Permission to skip tool confirmations is not permission to skip human
-approval on decisions.
-
-**Test before you commit; start narrow.** Begin with the smallest checks that
-exercise the change, then broaden. A commit that breaks relevant tests is
-worse than no commit. If tests don't exist for your change, write them.
-
-**Doc-check before you commit.** If you changed behavior, check whether a note
-in `notes/` needs updating.
-
-**Comments carry constraints, not narrative.** The ideal is no comments at
-all. Delete the comment and ask whether a competent editor could now
-reintroduce a defect the comment was preventing; if yes it stays, otherwise
-it goes. No decorative separators, no banners, no boxes.
-
-**Cite a branch by its SHA.** In notes and queue entries, write a branch as
-`` `name` (`sha`) `` on first mention. Branch names are borrowed; SHAs are not.
-Do not add a SHA to remote-tracking refs, repositories, or credential keys.
-
-**Merge, don't squash.** `gh pr merge --merge`. Keep branch commits clean
-before merging; the branch is the narrative.
-
-**Small PRs, and never stacked.** Every PR is cut fresh from a synced `main`
-and stands on its own. One reviewable idea per PR. If you find yourself
-needing a stack, stop and say so — it is a scoping mistake surfacing late.
-
-**Always work on a branch.** `main` is somewhere you merge into, never
-somewhere you commit. `<name>/<short-topic>`, kebab-case, what the work does.
-
-**Know which tree you are in, and prove it in the same command that writes.**
-The Bash tool starts a fresh shell per call, and the shared checkout can move
-between your calls. Activate identity in the shell that commits, and check the
-branch there too: `[ "$(git branch --show-current)" = "<branch>" ] && git
-commit …`. A branch check in an earlier call is a fact about the past.
-
-**A dirty working tree may not be yours.** `git status --porcelain` and `git
-diff --stat` before you stage; then `git add <explicit paths>`, never `-A`,
-never `.`. An edit you did not make is not yours to commit, revert, or
-improve — leave it, work around it, and say in your report that you saw it.
-
-**Unpushed is invisible.** Report work as *pushed* or *unpushed*, never as
-"done". Before asking anyone to look at a PR, `git rev-list --count @{u}..HEAD`
-must be `0` — and a branch with no upstream reports nothing rather than
-everything, so check `git branch -vv` too.
+{{STYLE_CLAUSE}}
 
 **Own your commits.** Commit under your own agent name, set by `agent-env`.
-No AI footers, no `Co-Authored-By` lines, no emoji markers. Clean conventional
-commit messages only.
+The guard refuses any other author, and an unset identity would land a
+commit as the owner.
 
-**Know when to abort.** If you're fundamentally blocked — missing credentials,
-service down, permissions error — say so with `[[ABORT]]` on its own line and a
-clear message. Silent non-accomplishment is worse than visible failure.
+**Prove the tree in the same command that writes.** Every command may run in
+a fresh shell, and the shared checkout can move between two of them.
+Activate identity and check the branch in the command that commits:
+`[ "$(git branch --show-current)" = "<branch>" ] && git commit …`. A check in
+an earlier command is a fact about the past.
 
-**Clean up before you leave.** `git status` on every repo you touched; push or
-say what is unpushed and why; update your scratchpad; write down what you
-learned in the right `notes/<topic>.md`, not what you did. The next session —
-you or a housemate — starts from a known-clean state.
+**Stage by explicit path.** `git status --porcelain` before you stage, then
+`git add <paths>` — never `-A`, never `.`. An edit you did not make is not
+yours to commit, revert or improve; leave it, work around it, and say you
+saw it.
 
 ### Domain rules
 
@@ -284,14 +239,19 @@ its workspace is the house's own: `~/agents/{{HOUSE_NAME}}/`. The
 
 - **mise** — the household's task surface. `mise run welcome` for
   orientation, `mise run test` for the household's own checks, `mise run
-  agent-env <name>` to activate an identity.
+  agent-env <name>` to activate an identity. The author it sets is
+  `<name>@{{AUTHOR_DOMAIN}}`: a label, not a mailbox. This house has no mail
+  and claims no domain; `HOUSE_AUTHOR_DOMAIN` in `mise.toml` is the label.
+  <!-- house:decide: the agents' author domain. `.invalid` is reserved and
+  belongs to nobody, which is the point; change it only to a domain this
+  house owns, and only once there is mail to go with it. -->
 {{TOOLING_PRESETS}}- **gh** — the owner's login, used as transport. No agent has a GitHub
-  identity of its own yet; every push and PR goes through the owner's
-  credentials and says so in the PR body. Giving the builders and judges
-  their own accounts is filed in [[household-backlog]]. The housekeeper is
-  excluded from that entry and from every channel: no account, no key, no
-  mailbox, ever. It reads GitHub through the owner's login and writes
-  nothing there.
+  identity of its own; every push and PR goes through the owner's
+  credentials and says so in the PR body. Whether the builders and judges
+  get accounts of their own is the owner's to file in [[household-backlog]].
+  The housekeeper is excluded from any such entry and from every channel:
+  no account, no key, no mailbox, ever. It reads GitHub through the owner's
+  login and writes nothing there.
 - **`hooks/agent-identity`** — refuses a commit whose author is not on
   `roster.tsv` unless `{{HOUSE_UPPER}}_OWNER_COMMIT=1`. Install with
   `mise run install-hooks`.
@@ -316,4 +276,4 @@ the left column, and only then.
 |---|---|
 | take, re-rank, or close a piece of work | [`notes/work-queue.md`](notes/work-queue.md) |
 | propose a change to this contract, an agent definition, the roster, or the hooks | [`notes/household-backlog.md`](notes/household-backlog.md) |
-<!-- house:read-first -->
+{{STYLE_ROW}}<!-- house:read-first -->

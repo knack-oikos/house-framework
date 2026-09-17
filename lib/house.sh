@@ -113,6 +113,12 @@ house_project() {
   sed -n 's/^HOUSE_PROJECT = "\(.*\)"$/\1/p' "$1/mise.toml" | head -1
 }
 
+house_author_domain() {
+  local domain
+  domain="$(sed -n 's/^HOUSE_AUTHOR_DOMAIN = "\(.*\)"$/\1/p' "$1/mise.toml" | head -1)"
+  printf '%s\n' "${domain:-$(house_name "$1").invalid}"
+}
+
 house_work_dir() {
   local house="$1" top
   top="$(git -C "$house" rev-parse --show-toplevel 2>/dev/null || true)"
@@ -180,7 +186,7 @@ insert_before_marker() {
 }
 
 today() {
-  date +%Y-%m-%d
+  printf '%s\n' "${HOUSE_TODAY:-$(date +%Y-%m-%d)}"
 }
 
 capitalize() {
@@ -258,6 +264,7 @@ add_agent() {
     "PROJECT=$project"
     "WORKSPACE_PATH=$(display_path "$workspace")"
     "HOME_PATH=$(display_path "$home_dir")"
+    "AUTHOR_DOMAIN=$(house_author_domain "$house")"
     "CREATED=$(today)"
   )
 
@@ -284,6 +291,21 @@ add_agent() {
       say "create: $(display_path "$home_dir") (AGENTS.md, mise.toml, SCRATCHPAD.md; local repo, no remote)"
     fi
   fi
+}
+
+style_names() {
+  local file
+  for file in "$HOUSE_TEMPLATES"/style/*.md; do
+    basename "$file" .md
+  done
+}
+
+lineage_names() {
+  local own name
+  own=" $(house_name "$1") $(house_project "$1" | tr '[:upper:]' '[:lower:]') "
+  while IFS= read -r name; do
+    case "$own" in *" $name "*) ;; *) printf '%s\n' "$name" ;; esac
+  done < <(awk '$1 == "house" { print $2 }' "$HOUSE_LIB_DIR/lineage-names")
 }
 
 preset_names() {

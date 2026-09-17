@@ -1,0 +1,17 @@
+[env]
+HOUSE_NAME = "example"
+HOUSE_PROJECT = "example"
+HOUSE_DIR = "{{ config_root }}"
+WORK_DIR = "{{ config_root }}"
+HOUSE_AUTHOR_DOMAIN = "example.invalid"
+
+[settings]
+experimental = true
+quiet = true
+task_output = "interleave"
+
+[tools]
+"aqua:KnickKnackLabs/bats-core" = "1.14.0-kkl.3"
+
+[settings.aqua]
+registries = ["https://github.com/KnickKnackLabs/bats-core"]
