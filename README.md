@@ -91,7 +91,9 @@ house export claude-code
 A standalone house gets its own repo and a bootstrap commit. An embedded
 house is a directory of the project repo; you commit it as the owner.
 
-A preset never overwrites a file that exists and never widens the contract:
+A preset never overwrites a file that exists, and these two never widen the
+contract (a preset for a channel such as chat or mail would, as a dated
+loosening row under the owner's name):
 `notes` declares the package and rewrites the shared-notes clause, but the
 encryption itself is `notes setup --gpg-key <fingerprint>`, the owner's
 step, which `init` names and `house doctor` fails without. `shimmer` is
