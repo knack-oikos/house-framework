@@ -11,3 +11,6 @@ while IFS= read -r f; do
   bash -n "$f"
 done < <(find templates -type f \( -path '*/.mise/tasks/*.tmpl' -o -path '*/hooks/*.tmpl' -o -name '*.sh' \) | sort)
 echo ok
+
+printf '\n== examples ==\n'
+mise run -q examples
