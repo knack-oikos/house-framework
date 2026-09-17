@@ -1,8 +1,12 @@
 # house-framework
 
-A tool repo, not a household. There is no roster here and no queue; an agent
-working on this repo is working *for* whichever house asked for the change,
-under that house's contract.
+A tool repo, not a household. There is no roster here and no queue. This
+file is the contract for this repository, for whoever's agent works on it —
+yours, under any harness or none, with no house behind it. It says what the
+repo must preserve and what a change needs;
+[`CONTRIBUTING.md`](CONTRIBUTING.md) has the mechanics. An agent that does
+belong to a house is still governed by that house's contract; this one
+governs the repo.
 
 ## What this repo must preserve
 
@@ -107,5 +111,6 @@ git diff --check
   `examples/` in the same change; the test task fails on drift.
 - Comments carry constraints, not narrative. No decorative separators.
 - Commit messages: conventional, no footers, no tool attribution.
-- When a template changes, say in the commit which house of the lineage
-  (`notes/lineage.md`) its practice came from, or that it is new.
+- When a template changes and you know which house of the lineage
+  (`notes/lineage.md`) its practice came from, say so in the commit; if you
+  do not, say it is new. Nobody is expected to know.
