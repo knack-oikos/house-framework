@@ -35,21 +35,22 @@ table.
 
 **oikos** ([`olavostauros/oikos`](https://github.com/olavostauros/oikos),
 2026-08) forked fold for one household of two, `knick` and `knack`, and grew
-the part fold did not have: an explicit authority model. The tiers (free / propose / never), the two-key rule, the
-loosenings table with its append-only and enumerated-once rules, the
-owner-only list, and the refusal of relayed approval all come from oikos,
-each one written after a real failure the note records. oikos also learned,
-expensively, that a contract loaded whole by every agent every session
-costs more than the work, and decided on 2026-09-03 that the contract holds
-authority only and practice moves to trigger-read notes.
+the part fold did not have: an explicit authority model. The tiers (free /
+propose / never), the two-key rule, the loosenings table with its
+append-only and enumerated-once rules, the owner-only list, and the refusal
+of relayed approval all come from oikos, each one written after a real
+failure the note records. oikos also learned, expensively, that a contract
+loaded whole by every agent every session costs more than the work, and
+decided on 2026-09-03 that the contract holds authority only and practice
+moves to trigger-read notes.
 
 **agora** (2026-09-16, inside `olavostauros/ticket`, a private repository
-with no public link) is oikos rebuilt for a
-project rather than for upstream contribution: four agents each owning a
-directory, a reviewer with no directory, the owner filing the queue, no KKL
-tooling beyond `bats`, plaintext notes, the owner's `gh` login as transport,
-and four domain rule sets — money, identity, data, review — that bind one
-agent each. It is the smallest thing that is still a household.
+with no public link) is oikos rebuilt for a project rather than for upstream
+contribution: four agents each owning a directory, a reviewer with no
+directory, the owner filing the queue, no KKL tooling beyond `bats`,
+plaintext notes, the owner's GitHub CLI (`gh`) login as transport, and four
+domain rule sets — money, identity, data, review — that bind one agent each.
+It is the smallest thing that is still a household.
 
 **house-framework** takes agora's size as the default and oikos's authority
 model as the invariant, and makes both generate.
