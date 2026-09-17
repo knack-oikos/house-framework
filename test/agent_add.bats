@@ -14,15 +14,28 @@ setup() {
   house init hearth --at "$H" --project "the forge" --no-housekeeper >/dev/null
 }
 
-@test "agent add --kind housekeeper adds one to a house created without it" {
-  run house agent add hestia --house "$H" --kind housekeeper
+@test "agent add housekeeper adds the housekeeper to a house created without it" {
+  run house agent add housekeeper --house "$H"
   assert_success
-  assert_output_contains "roster: hestia (housekeeper)"
+  assert_output_contains "roster: housekeeper (housekeeper)"
   assert_output_contains "its first sweep is the house's first audit"
-  grep -q $'^hestia\thousekeeping\t$' "$H/roster.tsv"
-  assert_file_contains "$H/notes/hestia.md" "The housekeeper of the forge"
-  assert_file_contains "$DEFINITIONS_DIR/hestia.md" "Housekeeper of the hearth household of the forge"
-  assert_file_contains "$AGENTS_ROOT/hestia/home/AGENTS.md" "the housekeeper of **the forge**"
+  grep -q $'^housekeeper\thousekeeping\t\thousekeeper$' "$H/roster.tsv"
+  assert_file_contains "$H/notes/housekeeper.md" "The housekeeper of the forge"
+  assert_file_contains "$AGENTS_ROOT/hearth/home/AGENTS.md" "the housekeeper of **the forge**"
+  [ ! -e "$AGENTS_ROOT/housekeeper" ]
+}
+
+@test "the housekeeper has one name and there is one per house" {
+  run house agent add hestia --house "$H" --kind housekeeper
+  assert_failure
+  assert_output_contains "the housekeeper is named housekeeper"
+  run house agent add housekeeper --house "$H" --role tidying --kind judge
+  assert_failure
+  assert_output_contains "housekeeper is the housekeeper's name"
+  house agent add housekeeper --house "$H"
+  run house agent add housekeeper --house "$H"
+  assert_failure
+  assert_output_contains "already on the roster"
 }
 
 @test "agent add refuses --owns on a judge or housekeeper and a builder without --owns" {
@@ -34,12 +47,12 @@ setup() {
   assert_output_contains "must --owns"
 }
 
-@test "agent add puts a builder on the roster with note, home, and definition" {
+@test "agent add puts a builder on the roster with note and home, and no harness file" {
   run house agent add vulcan --house "$H" --role backend --owns server/ --charge "Owns the schema and the API."
   assert_success
   assert_output_contains "roster: vulcan (builder)"
 
-  grep -q $'^vulcan\tbackend\tserver/$' "$H/roster.tsv"
+  grep -q $'^vulcan\tbackend\tserver/\tbuilder$' "$H/roster.tsv"
   assert_file_contains "$H/notes/vulcan.md" "Owns \`$H/server/\`"
   assert_file_contains "$H/AGENTS.md" "- **vulcan** — backend. Owns \`server/\`: Owns the schema and the API."
   assert_file_contains "$H/AGENTS.md" "| act as vulcan for the first time in a session | [\`notes/vulcan.md\`](notes/vulcan.md) |"
@@ -51,20 +64,18 @@ setup() {
   assert_file_contains "$AGENTS_ROOT/vulcan/home/AGENTS.md" "You own"
   assert_file_contains "$AGENTS_ROOT/vulcan/home/AGENTS.md" "git switch -c vulcan/<short-topic>"
 
-  [ -f "$DEFINITIONS_DIR/vulcan.md" ]
-  assert_file_contains "$DEFINITIONS_DIR/vulcan.md" "name: vulcan"
-  assert_file_contains "$DEFINITIONS_DIR/vulcan.md" "tools: Read, Grep, Glob, Bash, Edit, Write"
-  assert_file_contains "$DEFINITIONS_DIR/vulcan.md" "Backend for the hearth household of the forge"
-  ! grep -rq '{{' "$H/notes/vulcan.md" "$AGENTS_ROOT/vulcan/home" "$DEFINITIONS_DIR/vulcan.md"
+  assert_file_contains "$AGENTS_ROOT/vulcan/home/AGENTS.md" "$AGENTS_ROOT/vulcan/home"
+  [ -z "$(ls -A "$DEFINITIONS_DIR")" ]
+  ! grep -rq '{{' "$H/notes/vulcan.md" "$AGENTS_ROOT/vulcan/home"
+  ! grep -rqi 'claude' "$H" "$AGENTS_ROOT/vulcan/home"
 }
 
-@test "agent add without --owns makes a judge with no Edit or Write" {
+@test "agent add without --owns makes a judge" {
   run house agent add argus --house "$H" --role "review and security"
   assert_success
   assert_output_contains "roster: argus (judge)"
+  grep -q $'^argus\treview and security\t\tjudge$' "$H/roster.tsv"
   assert_file_contains "$H/AGENTS.md" "- **argus** — review and security. Owns no directory."
-  assert_file_contains "$DEFINITIONS_DIR/argus.md" "tools: Read, Grep, Glob, Bash, WebFetch, WebSearch"
-  assert_file_contains "$DEFINITIONS_DIR/argus.md" "Judgement only"
   assert_file_contains "$AGENTS_ROOT/argus/home/AGENTS.md" "You own no"
   assert_file_contains "$H/notes/argus.md" "Judgement, not patches"
 }
@@ -79,20 +90,17 @@ setup() {
   assert_output_contains "--role is required"
 }
 
-@test "agent add honours --no-home and --no-definition and keeps what exists" {
-  run house agent add hermes --house "$H" --role messenger --no-home --no-definition
+@test "agent add honours --no-home and keeps a home that exists" {
+  run house agent add hermes --house "$H" --role messenger --no-home
   assert_success
   [ ! -e "$AGENTS_ROOT/hermes" ]
-  [ ! -e "$DEFINITIONS_DIR/hermes.md" ]
 
   mkdir -p "$AGENTS_ROOT/apollo/home"
   printf 'mine\n' > "$AGENTS_ROOT/apollo/home/AGENTS.md"
-  printf 'mine\n' > "$DEFINITIONS_DIR/apollo.md"
   run house agent add apollo --house "$H" --role music
   assert_success
   assert_output_contains "keep:"
   [ "$(cat "$AGENTS_ROOT/apollo/home/AGENTS.md")" = "mine" ]
-  [ "$(cat "$DEFINITIONS_DIR/apollo.md")" = "mine" ]
 }
 
 @test "after agent add the house's own checks and guard know the new agent" {

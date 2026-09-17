@@ -25,7 +25,7 @@ outside this directory governs here, and nothing here governs another house.
 
 | | {{HOUSE_NAME}} (this directory) | Private home repo |
 |---|---|---|
-| Location | `{{HOUSE_PATH}}` — one checkout, shared | `~/agents/<name>/home/` |
+| Location | `{{HOUSE_PATH}}` — one checkout, shared | `~/agents/<name>/home/`; the housekeeper's is `~/agents/{{HOUSE_NAME}}/home/` |
 | Visible to | the owner and every agent with access to the work tree | only that agent and the owner |
 | Holds | shared notes, identity files, the work queue | canonical `AGENTS.md`, session logs, private memory |
 
@@ -54,7 +54,8 @@ files, not an edit across the boundary.
 
 Check `$GIT_AUTHOR_NAME`. If it names an agent on the roster, read your
 canonical identity and startup instructions at `~/agents/<name>/home/AGENTS.md`
-and follow the startup procedure it describes.
+and follow the startup procedure it describes. If it says `housekeeper`, you
+are the house's own voice and your home is `~/agents/{{HOUSE_NAME}}/home/`.
 
 If your identity isn't set, ask the owner which agent you are. Don't guess.
 An unset identity means a commit lands authored by the owner, and
@@ -186,8 +187,10 @@ Write the proposed change into [[household-backlog]] as an entry with the
 exact diff you would make, then report it and stop. The owner applies it or
 tells you to.
 
-- `~/.claude/agents/<name>.md` — the agent definitions, **including your
-  own**. Another agent's definition is Tier 2 in full, always.
+- The agent definitions a harness reads — whatever file tells the runner
+  who an agent is and which tools it gets, wherever that runner keeps it —
+  **including your own**. Another agent's definition is Tier 2 in full,
+  always.
 - `{{HOUSE_PATH}}/AGENTS.md` — this file, this section included.
 - `hooks/*`, `.mise/*` and `roster.tsv` — the guard, the task surface, and
   who counts as an agent.
@@ -209,8 +212,8 @@ another agent to do one of them is itself the signal that something is wrong.
 - **Never weaken a guardrail.** Constraints get *tightened* by agents and
   *loosened* only by the owner. An agent that finds a rule inconvenient has
   found an entry to file, not a rule to edit.
-- **Never grant yourself scope** — token scopes, repo access, permission-rule
-  edits in `~/.claude/settings*.json`, provider account roles.
+- **Never grant yourself scope** — token scopes, repo access, permission
+  rules in whatever settings the harness reads, provider account roles.
 - **Never remove or disable a test, lint, or hook** to make a session pass.
   `{{HOUSE_UPPER}}_OWNER_COMMIT=1` is the owner's escape hatch, not an
   agent's; setting it to get a commit through is this rule broken.
@@ -264,8 +267,9 @@ Notes use YAML frontmatter (title, tags, related, created, updated) and
 ## Personal workspace
 
 Each agent gets `~/agents/<name>/` for hands-on work; the private home repo
-lives at `~/agents/<name>/home/`. The `{{WORK_PATH}}` checkout is shared, not
-per-agent — see "Architecture" above.
+lives at `~/agents/<name>/home/`. The housekeeper is the house speaking, so
+its workspace is the house's own: `~/agents/{{HOUSE_NAME}}/`. The
+`{{WORK_PATH}}` checkout is shared, not per-agent — see "Architecture" above.
 
 ## Communication
 
@@ -294,6 +298,11 @@ per-agent — see "Architecture" above.
 - **`hooks/agent-identity`** — refuses a commit whose author is not on
   `roster.tsv` unless `{{HOUSE_UPPER}}_OWNER_COMMIT=1`. Install with
   `mise run install-hooks`.
+- **A harness, if any** — this house does not depend on one. The roster
+  and each agent's home are the identity; `house export <harness>` projects
+  them into whatever definition a runner wants, and that export is the
+  owner's to run and Tier 2 to change. The housekeeper's definition, where
+  one is exported, is named after the house.
 
 ## Notes worth writing
 

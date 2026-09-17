@@ -108,20 +108,24 @@ load test_helper
   assert_success
 }
 
-@test "init ships a housekeeper by default, with no GitHub identity and no mail" {
+@test "init ships a housekeeper by default, homed under the house's name, with no GitHub identity and no mail" {
   house init hearth --at "$BATS_TEST_TMPDIR/hearth"
   h="$BATS_TEST_TMPDIR/hearth"
-  grep -q $'^housekeeper\thousekeeping\t$' "$h/roster.tsv"
+  grep -q $'^housekeeper\thousekeeping\t\thousekeeper$' "$h/roster.tsv"
   assert_file_contains "$h/AGENTS.md" "- **housekeeper** — housekeeping. Owns no directory."
-  assert_file_contains "$h/AGENTS.md" "The exception is **housekeeper**, the housekeeper"
+  assert_file_contains "$h/AGENTS.md" "The exception is **housekeeper**, the house's own voice"
   assert_file_contains "$h/AGENTS.md" "The housekeeper is"
+  assert_file_contains "$h/AGENTS.md" "its workspace is the house's own: \`~/agents/hearth/\`"
   assert_file_contains "$h/notes/household-backlog.md" "The housekeeper is not in this entry"
   assert_file_contains "$h/notes/housekeeper.md" "No GitHub account, no signing key, no mail — by design"
-  assert_file_contains "$AGENTS_ROOT/housekeeper/home/AGENTS.md" "no GitHub account, no signing key, and no mail, permanently"
-  assert_file_contains "$DEFINITIONS_DIR/housekeeper.md" "name: housekeeper"
-  assert_file_contains "$DEFINITIONS_DIR/housekeeper.md" "no GitHub account, no signing key and"
-  assert_file_contains "$DEFINITIONS_DIR/housekeeper.md" "tools: Read, Grep, Glob, Bash, Edit, Write"
-  ! grep -rq '{{' "$h/notes/housekeeper.md" "$AGENTS_ROOT/housekeeper/home" "$DEFINITIONS_DIR/housekeeper.md"
+  assert_file_contains "$h/notes/housekeeper.md" "$AGENTS_ROOT/hearth/home/"
+  [ ! -e "$AGENTS_ROOT/housekeeper" ]
+  assert_file_contains "$AGENTS_ROOT/hearth/home/AGENTS.md" "# hearth"
+  assert_file_contains "$AGENTS_ROOT/hearth/home/AGENTS.md" "You are **housekeeper**, the housekeeper of **hearth**"
+  assert_file_contains "$AGENTS_ROOT/hearth/home/AGENTS.md" "no GitHub account, no signing key, and no mail, permanently"
+  [ -d "$AGENTS_ROOT/hearth/home/.git" ]
+  [ -z "$(ls -A "$DEFINITIONS_DIR")" ]
+  ! grep -rq '{{' "$h/notes/housekeeper.md" "$AGENTS_ROOT/hearth/home"
   [ -z "$(git -C "$h" status --porcelain)" ]
   run in_house "$h" test
   assert_success
@@ -132,20 +136,28 @@ load test_helper
   h="$BATS_TEST_TMPDIR/hearth"
   [ "$(awk -F '\t' '!/^#/ && NF' "$h/roster.tsv" | wc -l)" -eq 0 ]
   assert_file_contains "$h/AGENTS.md" "This house has no housekeeper"
-  [ ! -e "$DEFINITIONS_DIR/housekeeper.md" ]
+  [ ! -e "$AGENTS_ROOT/hearth" ]
 }
 
-@test "init --housekeeper-name names it, and a taken name is refused" {
-  house init hearth --at "$BATS_TEST_TMPDIR/hearth" --housekeeper-name hestia
-  grep -q '^hestia' "$BATS_TEST_TMPDIR/hearth/roster.tsv"
-  [ -f "$DEFINITIONS_DIR/hestia.md" ]
-  run house init hall --at "$BATS_TEST_TMPDIR/hall" --housekeeper-name hestia
+@test "init refuses a house whose name already keeps a housekeeper home" {
+  house init hearth --at "$BATS_TEST_TMPDIR/hearth"
+  run house init hearth --at "$BATS_TEST_TMPDIR/elsewhere/hearth"
   assert_failure
   assert_output_contains "already exists"
-  assert_output_contains "--housekeeper-name"
+  assert_output_contains "--no-housekeeper"
+  [ ! -e "$BATS_TEST_TMPDIR/elsewhere/hearth/AGENTS.md" ]
 }
 
-@test "the housekeeper's guard and env work like any agent's" {
+@test "two houses on one machine each keep their own housekeeper" {
+  house init hearth --at "$BATS_TEST_TMPDIR/hearth"
+  run house init hall --at "$BATS_TEST_TMPDIR/hall"
+  assert_success
+  [ -f "$AGENTS_ROOT/hearth/home/AGENTS.md" ]
+  [ -f "$AGENTS_ROOT/hall/home/AGENTS.md" ]
+  grep -q '^housekeeper' "$BATS_TEST_TMPDIR/hall/roster.tsv"
+}
+
+@test "the housekeeper's guard and env work like any agent's, and welcome points at the house's home" {
   house init hearth --at "$BATS_TEST_TMPDIR/hearth"
   h="$BATS_TEST_TMPDIR/hearth"
   run env -u HEARTH_OWNER_COMMIT GIT_AUTHOR_NAME=housekeeper "$h/hooks/agent-identity"
@@ -153,4 +165,7 @@ load test_helper
   run in_house "$h" agent-env housekeeper
   assert_success
   assert_output_contains "export GIT_AUTHOR_NAME=housekeeper"
+  run env GIT_AUTHOR_NAME=housekeeper bash -c 'in_house "$@"' _ "$h" welcome
+  assert_success
+  assert_output_contains "home: ~/agents/hearth/home/AGENTS.md"
 }

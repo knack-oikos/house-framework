@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+#MISE description="Project a house's roster into Claude Code agent definitions"
+#USAGE flag "--house <path>" help="The house directory; defaults to the current directory"
+#USAGE flag "--agent <name>" help="Export one agent instead of the whole roster"
+#USAGE flag "--to <dir>" help="Where the definitions go; defaults to HOUSE_DEFINITIONS_DIR or ~/.claude/agents"
+#USAGE flag "--force" help="Overwrite a definition that already exists"
+#USAGE example "house export claude-code --house ~/Work/ticket/agora" header="Every agent of a house"
+#USAGE example "house export claude-code --agent vulcan --force" header="Refresh one definition"
+set -euo pipefail
+
+source "$MISE_CONFIG_ROOT/lib/house.sh"
+
+HOUSE="$(house_root "${usage_house:-.}")"
+TO="${usage_to:-${HOUSE_DEFINITIONS_DIR:-$HOME/.claude/agents}}"
+TO="$(resolve_path "$TO")"
+FORCE="${usage_force:-false}"
+ONLY="${usage_agent:-}"
+TEMPLATES="$HOUSE_TEMPLATES/harness/claude-code"
+
+house_name="$(house_name "$HOUSE")"
+project="$(house_project "$HOUSE")"
+project="${project:-$house_name}"
+work="$(house_work_dir "$HOUSE")"
+
+if [ -n "$ONLY" ]; then
+  roster_has "$HOUSE" "$ONLY" || die "$ONLY is not on the roster of $(display_path "$HOUSE")"
+fi
+
+tools_for() {
+  case "$1" in
+    builder)     printf 'Read, Grep, Glob, Bash, Edit, Write' ;;
+    judge)       printf 'Read, Grep, Glob, Bash, WebFetch, WebSearch' ;;
+    housekeeper) printf 'Read, Grep, Glob, Bash, Edit, Write' ;;
+  esac
+}
+
+count=0
+while IFS= read -r agent; do
+  [ -z "$ONLY" ] || [ "$agent" = "$ONLY" ] || continue
+  count=$((count + 1))
+  kind="$(roster_kind "$HOUSE" "$agent")"
+  role="$(roster_field "$HOUSE" "$agent" 2)"
+  owns="$(roster_field "$HOUSE" "$agent" 3)"
+  workspace="$(agent_workspace "$HOUSE" "$agent" "$kind")"
+  case "$kind" in
+    builder)
+      definition="$agent"
+      description="$(capitalize "$role") for the $house_name household of $project — takes the top queued entry addressed to it, implements it under $(display_path "$work")/$owns on a $agent/<topic> branch with tests, runs the gates, and opens a pull request into main. Use for anything about $(display_path "$work")/$owns."
+      ;;
+    judge)
+      definition="$agent"
+      description="$(capitalize "$role") for the $house_name household of $project — takes the top queued entry addressed to it and answers it in the written record: findings with locations, rankings with reasons, verdicts with the evidence attached. Judgement only — never patches, never merges. Use for anything that needs an opinion rather than a change."
+      ;;
+    housekeeper)
+      definition="$house_name"
+      description="The $house_name household of $project, speaking as its housekeeper — standing work that needs no filing: audits the work queue, the backlog, the notes, the roster and the branches against what is actually on disk, fixes verified-false facts in notes/ on a local $agent/<topic> branch, files everything else for the owner, and reports what needs the owner. Carries no GitHub identity, no signing key and no mail, permanently. Use for 'is the record true', 'what is stale', 'what is unmerged or unpushed', or 'tidy the queue'."
+      ;;
+  esac
+  dest="$TO/$definition.md"
+  if [ -e "$dest" ] && [ "$FORCE" != "true" ]; then
+    say "keep: $(display_path "$dest") exists (--force to overwrite)"
+    continue
+  fi
+  render "$TEMPLATES/definition.$kind.md.tmpl" "$dest" \
+    "AGENT=$agent" \
+    "DEFINITION=$definition" \
+    "ROLE=$role" \
+    "OWNS=$owns" \
+    "TOOLS=$(tools_for "$kind")" \
+    "DESCRIPTION=$description" \
+    "HOUSE_NAME=$house_name" \
+    "HOUSE_PATH=$(display_path "$HOUSE")" \
+    "WORK_PATH=$(display_path "$work")" \
+    "PROJECT=$project" \
+    "WORKSPACE_PATH=$(display_path "$workspace")" \
+    "HOME_PATH=$(display_path "$workspace/home")" \
+    "EXPORTED=$(today)"
+  say "create: $(display_path "$dest") ($agent, $kind)"
+done < <(roster_agents "$HOUSE")
+
+[ "$count" -gt 0 ] || say "nothing to export: the roster of $(display_path "$HOUSE") is empty"
+say "next: a definition is Tier 2 in the house contract; re-run with --force only in the owner's own turn"

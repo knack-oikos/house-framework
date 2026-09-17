@@ -14,26 +14,47 @@ setup() {
   house init hearth --at "$H" >/dev/null
 }
 
-@test "doctor is healthy on a fresh house and warns about the empty roster and the guard" {
+@test "doctor is healthy on a fresh house and warns about the empty roster, the housekeeper and the guard" {
   rm -rf "$H"
   house init hearth --at "$H" --no-housekeeper >/dev/null
   run house doctor --house "$H"
   assert_success
   assert_output_contains "doctor: healthy"
   assert_output_contains "warn: roster is empty"
+  assert_output_contains "warn: no housekeeper"
   assert_output_contains "warn: pre-commit guard not installed"
 }
 
-@test "doctor is quiet once the guard is installed and an agent has everything" {
+@test "doctor is quiet once the guard is installed and an agent has everything, and never looks for a harness" {
   in_house "$H" install-hooks >/dev/null
   house agent add vulcan --house "$H" --role backend --owns server/ >/dev/null
   run house doctor --house "$H"
   assert_success
-  assert_output_contains "ok:   housekeeper: definition at"
+  assert_output_contains "ok:   housekeeper: home at $AGENTS_ROOT/hearth/home"
   assert_output_contains "ok:   vulcan: notes/vulcan.md"
   assert_output_contains "ok:   vulcan: home at"
-  assert_output_contains "ok:   vulcan: definition at"
   ! [[ "$output" == *"warn:"* ]]
+  ! [[ "$output" == *"definition"* ]]
+}
+
+@test "doctor fails on a second housekeeper or one under another name" {
+  printf 'hestia\thousekeeping\t\thousekeeper\n' >> "$H/roster.tsv"
+  run house doctor --house "$H"
+  assert_failure
+  assert_output_contains "fail: hestia: a housekeeper must be named housekeeper"
+  assert_output_contains "fail: roster lists 2 housekeepers"
+}
+
+@test "doctor reads a roster without a kind column" {
+  house agent add vulcan --house "$H" --role backend --owns server/ >/dev/null
+  house agent add argus --house "$H" --role review >/dev/null
+  awk -F '\t' 'BEGIN { OFS = "\t" } /^#/ { print; next } { print $1, $2, $3 }' "$H/roster.tsv" > "$H/roster.new"
+  mv "$H/roster.new" "$H/roster.tsv"
+  run house doctor --house "$H"
+  assert_success
+  assert_output_contains "ok:   housekeeper: home at $AGENTS_ROOT/hearth/home"
+  assert_output_contains "ok:   vulcan: home at $AGENTS_ROOT/vulcan/home"
+  assert_output_contains "ok:   argus: home at $AGENTS_ROOT/argus/home"
 }
 
 @test "doctor fails when an agent is on the roster but not in the contract" {
