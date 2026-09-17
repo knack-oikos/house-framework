@@ -26,10 +26,16 @@ It distils three generations of the same idea:
   notes, the owner's login as transport, and rule sets for money, identity,
   data and review.
 
-Every house starts at the agora tier. Each oikos capability — encryption,
-per-agent GitHub identity, mail, chat, CI wakes — is a backlog entry the
-owner switches on, and a dated widening in the contract when they do. See
-[`notes/lineage.md`](notes/lineage.md) for what was kept, dropped, and why.
+Every house starts at the agora tier, and starts empty: the shape is the
+lineage's, the words are the owner's. `init` renders the authority model
+whole and leaves every question it cannot answer for the owner — what the
+house is, who owns it, how the owner merges, the house style, the first
+backlog entries — as a `<!-- house:decide: … -->` marker, and `house doctor`
+fails until the owner has answered each one. Each oikos capability —
+encryption, per-agent GitHub identity, mail, chat, CI wakes — is the owner's
+to file and switch on, and a dated widening in the contract when they do.
+See [`notes/lineage.md`](notes/lineage.md) for what was kept, dropped, and
+why.
 
 ## Install
 
@@ -53,10 +59,13 @@ shiv install house ~/Work/house-framework
 house init agora --at ~/Work/ticket/agora --embedded
 
 # A house that is a repo of its own and works on other repos
-house init oikos --at ~/Work/oikos
+house init oikos --at ~/Work/oikos --owner 'Olavo'
 
 # The same, on encrypted notes and shimmer (exact shiv pins, opt-in)
 house init oikos --at ~/Work/oikos --with notes,shimmer
+
+# The same, with the practice oikos wrote rendered as notes/house-style.md
+house init oikos --at ~/Work/oikos --style oikos
 
 cd ~/Work/ticket/agora
 house agent add caesar --role payments --owns payments/ \
@@ -68,7 +77,7 @@ house rules add review --binds argus
 
 mise run install-hooks
 mise run welcome
-house doctor
+house doctor            # fails, naming each house:decide marker, until the house is yours
 
 # Only if the agents run under Claude Code
 house export claude-code
@@ -78,18 +87,39 @@ house export claude-code
 
 | Path | What it is |
 |---|---|
-| `AGENTS.md` | the contract: house rules, a slot for domain rule sets, the tiers, the loosenings table, the two-key rule, the Read-first table |
+| `AGENTS.md` | the contract: what the house is (a marker, for the owner), who owns it, the roster, three rules that protect the guard and the shared checkout, a slot for domain rule sets, the tiers, the loosenings table, the two-key rule, the Read-first table |
 | `roster.tsv` | who counts as an agent, with role, owned directory and kind — read by the guard, `agent-env`, `welcome`, `doctor` and every exporter |
 | `notes/work-queue.md` | the owner files entries here, each addressed to one agent |
-| `notes/household-backlog.md` | Tier 2 proposals; seeded with the two upgrades every house eventually wants |
+| `notes/household-backlog.md` | Tier 2 proposals; empty but for a marker asking which changes this house wants first |
 | `hooks/agent-identity` | pre-commit guard: refuses an author not on the roster unless `<HOUSE>_OWNER_COMMIT=1` |
-| `.mise/tasks/{welcome,test,agent-env,install-hooks}` | the task surface |
+| `.mise/tasks/{welcome,test,agent-env,install-hooks}` | the task surface; `agent-env` sets `<name>@<house>.invalid` as the git author, a label on a reserved name that claims no domain |
 | `test/*.bats` | the house's own checks, roster-driven so they stay true as agents join |
-| `mise.toml`, `README.md`, `.gitignore` | the rest |
+| `mise.toml`, `README.md`, `.gitignore` | the rest; the README carries the one line of attribution a house keeps, `Started from house-framework on <date>` |
+| `--owner <name>` | who the owner is, in the contract; defaults to git `user.name`, and to a marker when that is unset |
+| `--style <name>` | opt-in: the practice one household wrote — review, merge, comment, PR size, what a session leaves behind — as `notes/house-style.md`, wired to Read-first and named in the bootstrap commit. `oikos` is the one that ships. Without it the contract asks the owner for a style and has none |
 | `--with notes,shimmer` | opt-in: each named package as an exact `shiv:` pin plus `[plugins] shiv`, its wiring (`agent:list` for shimmer), its bats file, and the contract, README and backlog rewritten where the package makes them false; without the flag nothing changes |
 
-A standalone house gets its own repo and a bootstrap commit. An embedded
-house is a directory of the project repo; you commit it as the owner.
+A standalone house gets its own repo and a bootstrap commit, which is where
+the framework's name goes. An embedded house is a directory of the project
+repo; you commit it as the owner.
+
+## Making it yours
+
+A fresh house is not `healthy`, on purpose. `house doctor` fails on every
+`<!-- house:decide: … -->` marker, every leftover `{{KEY}}`, every agent
+Stance the owner has not written, and every lineage name — `oikos`,
+`agora`, `fold`, and `KnickKnackLabs` outside a tool pin unless a preset
+declared the package — each with its file and line. Answer each marker in
+the text around it and delete the comment; write each agent's Stance in
+`notes/<name>.md`; then `doctor` reports `healthy`. The house's own name and
+project are never counted as lineage, so a house called `agora` passes.
+
+What `init` produces, before any of that, is [`examples/`](examples/): a
+standalone house named `hearth` at `~/Work/hearth` with the housekeeper, a
+builder, a judge and the review rules, plus the three homes under
+`~/agents/`. It is regenerated by `mise run examples --write` and compared
+with a fresh render by `mise run test`, so the table above is checked, not
+described.
 
 A preset never overwrites a file that exists, and these two never widen the
 contract (a preset for a channel such as chat or mail would, as a dated
@@ -124,15 +154,17 @@ harness definition exported for it is named after the house. Two houses on
 one machine therefore never collide, and each keeps its own.
 
 It carries **no GitHub account, no signing key and no mail, permanently.**
-Its note and its home say so, and the backlog entry that gives the other
-agents identities names it as excluded. It reads GitHub through the owner's
-login and writes nothing there; it pushes nothing. The record can be trusted
-because the one agent whose job is the record has no voice outside the house.
+Its note and its home say so, and the contract excludes it from any identity
+entry the owner files for the other agents. It reads GitHub through the
+owner's login and writes nothing there; it pushes nothing. The record can be
+trusted because the one agent whose job is the record has no voice outside
+the house.
 
 ## What `agent add` writes
 
 - a row on `roster.tsv`: name, role, owned directory, kind
-- `notes/<name>.md`, the household-visible identity
+- `notes/<name>.md`, the household-visible identity, with a Stance the owner
+  writes before the agent first wakes — `doctor` fails until it is written
 - a bullet under "Who lives here" and a row in the Read-first table
 - `~/agents/<name>/home/` with `AGENTS.md`, `mise.toml`, `SCRATCHPAD.md`, as
   a local git repo — the agent's own startup contract, in the `AGENTS.md`
@@ -179,16 +211,22 @@ These hold in every house, and `house doctor` checks the ones a script can:
   read or write a runner's files; only an exporter does.
 - **There is one housekeeper, named `housekeeper`, homed under the house's
   name.** It has no outward identity, and no upgrade path gives it one.
+- **A fresh house is the owner's to finish.** Every question the framework
+  cannot answer is a `house:decide` marker, `doctor` fails on each until it
+  is answered, and no generated file names a lineage, a runner, or a
+  toolchain outside a tool pin or a preset.
 
 ## Development
 
 ```bash
 mise trust
 mise install
-mise run test
+mise run test                 # bats, template syntax, and examples/ against a fresh render
+mise run examples --write     # after a template change; commit examples/ with it
 git diff --check
 ```
 
 The tests scaffold houses into temporary directories with `HOUSE_AGENTS_ROOT`
 and `HOUSE_DEFINITIONS_DIR` pointed away from your real `~/agents` and
-`~/.claude/agents`. Nothing under your home is touched.
+`~/.claude/agents`, and `examples` renders under a temporary `HOME`. Nothing
+under your home is touched.

@@ -50,18 +50,23 @@ model as the invariant, and makes both generate.
 | oikos | the tiers, the two-key rule, the loosenings table, Tier 3's refusal rule | each one is the fix for a recorded failure |
 | oikos | "the contract is authority-only", "enumerated only here", "narrowing is yours, widening is the owner's" | satellite copies went stale twice and silently cancelled grants |
 | oikos | the pre-commit identity guard with an owner-only escape hatch | 36 misattributed commits before it existed |
-| oikos | the git rules: cite by SHA, merge don't squash, small never stacked, prove the branch in the same command, unpushed is invisible, a dirty tree may not be yours | each has a dated near-miss behind it |
+| oikos | three git rules in the contract — own your commits, prove the tree in the command that writes, stage by explicit path — and the rest of its practice as `templates/style/oikos.md` | the three protect the guard and the shared checkout, which every house has; the rest is taste with a dated near-miss behind it, and a new house takes it only by asking (`--style oikos`) |
 | agora | the embedded placement, directory ownership, the owner files the queue, no agent merges, the seam rule (interface one owns, call site another owns) | the smallest form that still separates authority from work |
 | agora | `agent-env` instead of `shimmer as`, plaintext notes, the owner as transport | a house should wake on day one with `git`, `mise` and `bats` only |
 | agora | the four rule sets | they are what turned a style guide into a contract |
-| agora | the "what is deliberately not here yet" list | so the missing pieces read as choices, not gaps |
+| agora | the "what is not here yet" list, without its comparator | so the missing pieces read as choices, not gaps — and as this house's choices, not a comparison with another |
 
 ## Dropped, and why
 
 - **The KKL toolchain as a requirement.** fold and oikos declare thirteen
-  shiv packages; a fresh house declares one aqua tool. Each package is an
-  upgrade the owner adds when a reason exists. The backlog template seeds
-  the two that always come first — encryption and per-agent identity.
+  shiv packages; a fresh house declares one aqua tool, `bats`, and it comes
+  from the Knick Knack Labs fork only because the standard aqua package does
+  not run (`bats-exec-file: command not found`, measured 2026-09-17 on
+  `aqua:bats-core/bats-core.14.0` and on mise's `bats` backend, which is
+  the same package). Each package is a preset the owner asks for. The
+  backlog no longer seeds anything: the two upgrades oikos took first were
+  oikos's answers, and a house that is not on GitHub deleted them before
+  the backlog was its own.
 - **Hardcoded rosters.** agora repeats its four names in the hook, in
   `agent-env`, in `welcome` and in every test. house-framework puts them in
   `roster.tsv` and has everything read it, so `agent add` touches the
@@ -71,9 +76,14 @@ model as the invariant, and makes both generate.
   the point of the table.
 - **The `~/oikos` path confusion.** oikos's contract says `~/oikos` and the
   checkout is `~/Work/oikos`. Templates render the real path, once, at init.
-- **The practice.** oikos's contract runs to 1,100 lines; the template is
-  about a third of that and holds rules, not worked examples. A house writes
-  its own notes as it earns them and wires each to the Read-first table.
+- **The practice.** oikos's contract runs to 1,100 lines; the template holds
+  the authority model, three guard rules and the house's own mechanics, and
+  no worked examples. Until 2026-09-17 it also carried the house-rules block
+  fold wrote and agora kept — sixteen bold headings from *Push back* to
+  *Clean up before you leave* — as if it were part of the contract; that is
+  now `templates/style/oikos.md`, rendered as `notes/house-style.md` only by
+  `house init --style oikos`. A house writes its own notes as it earns them
+  and wires each to the Read-first table.
 - **Discord, Bluesky, mail, chat mirror.** Each is a channel oikos granted
   in the owner's turn. The template's Communication section says how such a
   grant is recorded, and grants none.
@@ -135,3 +145,52 @@ model as the invariant, and makes both generate.
   file named after the house — is meant to be copied for the next runner;
   the first copy will show what belongs in `lib/house.sh` and what stays
   per harness.
+
+## Moved out of the house layer, 2026-09-17
+
+house-framework#6 measured a fresh `house init` against its own claim to be
+a starting point: 131 of the rendered contract's 246 non-blank lines were
+byte-identical to agora's, the house named oikos, fold or Knick Knack Labs
+ten times in four of its own files, and `doctor` called it healthy. The
+invariants were not the problem; the voice and the defaults were. What
+moved, and where to:
+
+- **The self-description.** The contract's second paragraph explained the
+  house by reference to house-framework, oikos and fold (agora's opening,
+  one generation on). It is now a `house:decide` marker asking the owner
+  what the house is. The README keeps one line, `Started from
+  house-framework on <date>`, and the bootstrap commit names the framework
+  and the style, if any. That is all the attribution a house carries.
+- **The house-rules block.** fold's headings, agora's text, six oikos
+  clauses condensed — none an invariant, all rendered as if they were. The
+  three that protect the guard and the shared checkout stay in the
+  contract, phrased without naming a runner: own your commits, prove the
+  tree in the command that writes, stage by explicit path. The rest is
+  `templates/style/oikos.md`, a note the owner asks for with `--style`.
+- **The lineage's answers where the owner's go.** The two backlog seeds
+  were oikos's upgrade path; the mail domain `<house>.local` was the
+  `OIKOS_EMAIL_DOMAIN` idea in a house with no mail; "Compared with oikos"
+  made the absence list a comparison; `--owner` was parsed and rendered
+  nowhere. Each is now either rendered (`--owner`, into "Who lives here")
+  or a marker (the first backlog entries, the author domain, which absences
+  the house cares about, how the owner merges, each agent's Stance). The
+  author label is `<name>@<house>.invalid`: a reserved name that belongs to
+  nobody, so the house claims nothing it does not own.
+- **Runner and toolchain words.** "The Bash tool starts a fresh shell per
+  call" is Claude Code's Bash tool, stated in the contract, the guard and
+  every home as a property of the world; it now reads "a runner may start a
+  fresh shell for every command". `[[ABORT]]` is shimmer's CI-wake
+  convention and lives only in the shimmer preset's Tooling bullet. The
+  `bats` pin stays, for the reason under *Dropped* above, and is the only
+  place a default house spells Knick Knack Labs.
+- **A rule set declaring its own tier.** The money rules said "This line is
+  Tier 3 for the whole house" from outside the tiers block, against the
+  rule that Tier 3 is enumerated in one place. The claim is dropped; the
+  line stays as a money rule. Putting the bullet inside Tier 3 by tool was
+  the other route and is the owner's to take.
+
+`doctor` now fails on every `house:decide` marker, leftover `{{KEY}}`,
+unwritten Stance and lineage name, so a fresh house is not healthy until the
+owner has made it theirs — which is the correct state for a starting point.
+`examples/` is what `init` renders before that, regenerated by `mise run
+examples --write` and checked by `mise run test`.
