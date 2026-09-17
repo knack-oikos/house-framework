@@ -19,15 +19,24 @@ discipline applies here as in a live house:
 - **The three markers** (`house:roster`, `house:rules`, `house:read-first`)
   are load-bearing: `agent add` and `rules add` insert at them and `doctor`
   checks for them. Rename one and every existing house fails `doctor`.
-- **The housekeeper stays voiceless.** Its three templates
-  (`note.housekeeper`, `home/AGENTS.housekeeper`, `definition.housekeeper`)
-  each state that it has no GitHub identity and no mail by design, and the
-  backlog template excludes it from the identity entry. Do not add a
-  `--github` or `--mail` path for it; a house that wants a speaking agent
-  adds a judge.
-- **Generated files are never overwritten.** `install_tree` and `agent add`
-  keep what exists and say so. A change to a template reaches an existing
-  house only by hand, in that house's own turn.
+- **The housekeeper stays voiceless, singular and named.** Its templates
+  (`agent/note.housekeeper`, `agent/home/AGENTS.housekeeper`, and each
+  harness's `definition.housekeeper`) each state that it has no GitHub
+  identity and no mail by design, and the backlog template excludes it from
+  the identity entry. Its name is the constant `HOUSEKEEPER` in
+  `lib/house.sh`; its home is keyed by the house name, and an exported
+  definition is named after the house. Do not add a rename flag, a
+  `--github` or `--mail` path, or a way to have two; a house that wants a
+  speaking agent adds a judge.
+- **The house is harness-agnostic.** `init`, `agent add` and `doctor` read
+  and write only the house, `~/agents/<name>/home` and the roster. Anything
+  a runner needs lives under `templates/harness/<name>/` and is written only
+  by `.mise/tasks/export/<name>`. Do not let a harness path, tool name or
+  settings file back into the contract, the notes, the homes or the library.
+- **Generated files are never overwritten.** `install_tree`, `agent add` and
+  every exporter keep what exists and say so (`export` takes `--force`). A
+  change to a template reaches an existing house only by hand, in that
+  house's own turn.
 
 ## Working here
 

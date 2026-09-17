@@ -6,7 +6,6 @@
 #USAGE flag "--project <project>" help="What the household works on; defaults to the parent repo's name when embedded, else the house name"
 #USAGE flag "--owner <owner>" help="The owner's name as it appears in the record; defaults to git user.name"
 #USAGE flag "--no-housekeeper" help="Do not add the housekeeper agent"
-#USAGE flag "--housekeeper-name <name>" help="Name for the housekeeper; defaults to 'housekeeper'"
 #USAGE flag "--no-commit" help="Leave the generated files uncommitted"
 #USAGE example "house init agora --at ~/Work/ticket/agora --embedded" header="A house inside the project it works on"
 #USAGE example "house init oikos --at ~/Work/oikos" header="A standalone house that works on other repos"
@@ -20,9 +19,7 @@ UPPER="$(upper_env "$NAME")"
 EMBEDDED="${usage_embedded:-false}"
 OWNER="${usage_owner:-$(git config user.name 2>/dev/null || true)}"
 OWNER="${OWNER:-the owner}"
-KEEPER="${usage_housekeeper_name:-housekeeper}"
 AGENTS_ROOT="${HOUSE_AGENTS_ROOT:-$HOME/agents}"
-DEFINITIONS_DIR="${HOUSE_DEFINITIONS_DIR:-$HOME/.claude/agents}"
 
 TARGET="$(resolve_path "${usage_at:-$NAME}")"
 TARGET="$(canonical_path "$TARGET")"
@@ -44,11 +41,9 @@ fi
 if [ "${usage_no_housekeeper:-false}" = "true" ]; then
   HOUSEKEEPER_CLAUSE="This house has no housekeeper; the owner keeps the record true, and a later \`house agent add <name> --kind housekeeper\` changes that."
 else
-  validate_name "housekeeper name" "$KEEPER"
-  for taken in "$AGENTS_ROOT/$KEEPER/home/AGENTS.md" "$DEFINITIONS_DIR/$KEEPER.md"; do
-    [ ! -e "$taken" ] || die "$(display_path "$taken") already exists — another house's housekeeper? Pass --housekeeper-name <name> or --no-housekeeper"
-  done
-  HOUSEKEEPER_CLAUSE="The exception is **$KEEPER**, the housekeeper, whose work is standing and needs no filing: keeping this record true. It carries no GitHub identity and no mail, by design, and speaks only to the owner in the session."
+  taken="$AGENTS_ROOT/$NAME/home/AGENTS.md"
+  [ ! -e "$taken" ] || die "$(display_path "$taken") already exists — a house named $NAME already keeps its housekeeper there. Pick another name or pass --no-housekeeper"
+  HOUSEKEEPER_CLAUSE="The exception is **$HOUSEKEEPER**, the house's own voice, whose work is standing and needs no filing: keeping this record true. It carries no GitHub identity and no mail, by design, and speaks only to the owner in the session."
 fi
 
 VARS=(
@@ -78,12 +73,15 @@ install_tree "$HOUSE_TEMPLATES/house" "$TARGET" "${VARS[@]}"
 mise trust "$TARGET/mise.toml" >/dev/null
 
 if [ "${usage_no_housekeeper:-false}" != "true" ]; then
-  add_agent "$TARGET" "$KEEPER" housekeeping "" "" "" housekeeper false false
+  add_agent "$TARGET" "$HOUSEKEEPER" housekeeping "" "" housekeeper false
 fi
 
 if [ "${usage_no_commit:-false}" = "true" ]; then
   say "skip: initial commit (--no-commit)"
 elif [ "$NEW_REPO" = "true" ] && [ -z "$PREEXISTING" ]; then
+  if signing="$(signing_describe "$TARGET")"; then
+    say "sign: the bootstrap commit is signed ($signing); a passphrase prompt that appears now is for it. --no-commit leaves the files for the owner to commit instead"
+  fi
   git -C "$TARGET" add .
   env "${UPPER}_OWNER_COMMIT=1" git -C "$TARGET" commit -q -m "$NAME: bootstrap the household from house-framework"
   say "commit: bootstrap the household"
@@ -95,3 +93,4 @@ say ""
 say "done: $NAME at $(display_path "$TARGET") (work tree: $(display_path "$WORK"))"
 say "next: house agent add <name> --house $(display_path "$TARGET") --role '<role>' [--owns <dir>/]"
 say "next: cd $(display_path "$TARGET") && mise run install-hooks && mise run welcome"
+say "next: house export claude-code --house $(display_path "$TARGET") if the agents run under Claude Code"

@@ -22,3 +22,9 @@ setup() {
   grep -qxF "### The loosenings — canonical list" "$HOUSE/AGENTS.md"
   grep -qxF "#### The two-key rule" "$HOUSE/AGENTS.md"
 }
+
+@test "the roster has at most one housekeeper and it is named housekeeper" {
+  keepers="$(awk -F '\t' '!/^#/ && $4 == "housekeeper" { print $1 }' "$HOUSE/roster.tsv")"
+  [ "$(printf '%s' "$keepers" | grep -c .)" -le 1 ]
+  [ -z "$keepers" ] || [ "$keepers" = housekeeper ]
+}

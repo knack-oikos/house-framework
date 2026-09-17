@@ -88,7 +88,21 @@ model as the invariant, and makes both generate.
   duty on its own, as an agent that carries no GitHub identity and no mail
   by design, so that the one agent whose job is trust in the record is
   never itself a voice the record has to account for. It is on every roster
-  from `init` unless `--no-housekeeper`.
+  from `init` unless `--no-housekeeper`. On 2026-09-16 the owner fixed two
+  more things about it: there is exactly one per house and its name is
+  always `housekeeper`, and it is the house speaking rather than a resident
+  of it — so its home is `~/agents/<house>/home` and an exported definition
+  is named after the house. The first version had a `--housekeeper-name`
+  flag, added only so two houses could share one `~/agents`; keying the
+  home by house removed the reason for it.
+- **Harness independence.** fold, oikos and agora all wrote Claude Code
+  definitions into `~/.claude/agents/` as part of adding an agent, and the
+  first house-framework did too. The owner's rule on 2026-09-16 is that a
+  house does not depend on a runner: the roster carries the agent's kind,
+  the home `AGENTS.md` is its brief, and a runner's file is a projection of
+  those made by `house export <harness>`, kept under `templates/harness/`.
+  The contract now says "the definitions a harness reads" where it used to
+  say a path.
 
 ## Open
 
@@ -103,3 +117,8 @@ model as the invariant, and makes both generate.
 - **The oikos tier as a preset.** `house init --with notes,shimmer` could
   declare the packages and swap `agent-env` for `shimmer as`. Not built
   until a second house wants it.
+- **A second harness.** `export claude-code` is the only exporter. The
+  shape — kind to tool set, roster to one file per agent, the housekeeper's
+  file named after the house — is meant to be copied for the next runner;
+  the first copy will show what belongs in `lib/house.sh` and what stays
+  per harness.

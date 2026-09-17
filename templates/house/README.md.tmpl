@@ -41,6 +41,30 @@ eval "$(mise run -q agent-env <name>)" # become an agent, in the shell that comm
 - **`.mise/tasks/`** — the household's own machinery.
 - **`test/`** — the household's own checks, run by `mise run test`.
 
+## Signing
+
+Whether commits here are signed is the machine's git config, not the
+house's. `mise run welcome` reports it under `== signing ==`, with the key.
+When they are signed, expect three things:
+
+- **A passphrase prompt during a `house` command or a commit is for that
+  key.** The dialog is GnuPG's: it names the key and not the terminal that
+  asked. `house init` says so before its bootstrap commit; nothing else
+  in the house opens one on its own.
+- **An agent's commit is signed with the owner's key.** `agent-env` sets
+  the author and committer only, so a commit made as an agent is authored
+  by the agent and verifies as the owner. Per-agent keys are the backlog
+  entry in `notes/household-backlog.md`, not a switch.
+- **The prompt repeats.** With no `~/.gnupg/gpg-agent.conf`, gpg-agent
+  caches a passphrase for 10 minutes and drops it after 2 hours, so a long
+  session asks more than once. A longer `default-cache-ttl` and
+  `max-cache-ttl` there, or a pinentry backed by the login keyring, stops
+  it; both are machine setup, outside the house.
+
+To stop signing for this repository alone: `git -C {{WORK_PATH}} config
+commit.gpgsign false`, in the owner's own turn. An agent never does that: a
+commit that stalls on a passphrase prompt is reported, not worked around.
+
 ## What is deliberately not here yet
 
 Compared with oikos: no git-crypt on `notes/`, no per-agent GitHub identity
