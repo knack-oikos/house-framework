@@ -154,7 +154,7 @@ the bootstrap commit names the households it was distilled from, and
 
 | Path | What it is |
 |---|---|
-| `AGENTS.md` | the contract: what the house is, who owns it, the roster, how the owner merges, three rules that protect the guard and the shared checkout, a slot for domain rule sets, the tiers, the loosenings table, the two-key rule, the Read-first table |
+| `AGENTS.md` | the contract: what the house is, who owns it, the roster, how the owner merges, three rules that protect the guard and the shared checkout, a Domain rules section for you to write into, the tiers, the loosenings table, the two-key rule, the Read-first table |
 | `roster.tsv` | who counts as an agent, with role, owned directory and kind — read by the guard, `agent-env`, `welcome`, `doctor` and every exporter; the housekeeper is its first row |
 | `notes/work-queue.md` | the owner files entries here, each addressed to one agent |
 | `notes/household-backlog.md` | Tier 2 proposals; empty |
@@ -235,12 +235,11 @@ Whatever the kind, the owner merges and the owner files the queue.
 ## Domain rules
 
 A rule set binds one named agent: five or six lines the code can be
-checked against, in the contract above the `house:rules` marker. The
-contract's "Domain rules" section says when to write one, and you write it
-there, in your own turn. `house rules add <set>` still inserts one of four
-shipped sets from `rules/`; the sets and the command are the last menu in
-this repository and are being removed
-([#15](https://github.com/olavostauros/house/issues/15)).
+checked against, in the contract's "Domain rules" section. That section
+says when to write one — when an agent's mistakes would be permanent or
+expensive — and the shape it takes, and you write it there, in your own
+turn. The framework ships none: it does not know your domain, and the four
+sets it once carried were one household's answers.
 
 ## Harnesses
 
@@ -293,8 +292,8 @@ git diff --check
 
 `test` is hidden from the shim's surface (`hide = true` in its header), so
 `house test` is not a command and `mise run test` is; the user-facing
-surface is `init`, `doctor`, `version`, `agent add`, `rules add` and
-`export <harness>`. How a release is cut is in
+surface is `init`, `doctor`, `version`, `agent add` and `export <harness>`.
+How a release is cut is in
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 The tests scaffold houses into temporary directories with `HOUSE_AGENTS_ROOT`

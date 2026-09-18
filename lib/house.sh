@@ -61,18 +61,6 @@ render() {
   printf '%s' "$content" > "$dest"
 }
 
-render_string() {
-  local content="$1"
-  shift
-  local key value
-  for kv in "$@"; do
-    key="${kv%%=*}"
-    value="${kv#*=}"
-    content="${content//"{{$key}}"/"$value"}"
-  done
-  printf '%s' "$content"
-}
-
 install_tree() {
   local src_root="$1" dest_root="$2"
   shift 2

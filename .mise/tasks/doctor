@@ -47,7 +47,7 @@ for f in hooks/agent-identity .mise/tasks/welcome .mise/tasks/test .mise/tasks/a
   [ -f "$HOUSE/$f" ] && [ ! -x "$HOUSE/$f" ] && fail "$f is not executable"
 done
 
-for marker in "<!-- house:roster -->" "<!-- house:rules -->" "<!-- house:read-first -->"; do
+for marker in "<!-- house:roster -->" "<!-- house:read-first -->"; do
   if grep -qxF "$marker" "$HOUSE/AGENTS.md" 2>/dev/null; then ok "marker $marker"; else fail "AGENTS.md lacks marker $marker"; fi
 done
 

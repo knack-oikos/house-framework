@@ -28,11 +28,12 @@ setup() {
 @test "the framework has a scaffold, not templates: no menu, no .tmpl, and nothing that asks the owner" {
   [ ! -e "$REPO_DIR/templates" ]
   [ ! -e "$REPO_DIR/examples" ]
+  [ ! -e "$REPO_DIR/rules" ]
   [ -d "$REPO_DIR/scaffold/house" ]
   [ -d "$REPO_DIR/scaffold/agent" ]
   run find "$REPO_DIR/scaffold" -name '*.tmpl'
   [ -z "$output" ]
-  run grep -rl 'house:decide' "$REPO_DIR/scaffold" "$REPO_DIR/lib" "$REPO_DIR/.mise"
+  run grep -rlE 'house:decide|house:rules|rules add' "$REPO_DIR/scaffold" "$REPO_DIR/lib" "$REPO_DIR/.mise"
   [ -z "$output" ]
   run grep -rlE 'usage_(style|with|no_housekeeper|kind|no_home)\b' "$REPO_DIR/lib" "$REPO_DIR/.mise"
   [ -z "$output" ]
@@ -57,7 +58,6 @@ setup() {
   house init hearth --at "$h"
   house agent add vulcan --house "$h" --role backend --owns server/ >/dev/null
   house agent add argus --house "$h" --role review >/dev/null
-  house rules add money --house "$h" --binds vulcan >/dev/null
   run bash -c "grep -rniwE '$LINEAGE' --exclude-dir=.git --exclude=mise.toml '$h' '$AGENTS_ROOT' | grep -vE 'olavostauros/house([^a-z0-9-]|$)'"
   [ -z "$output" ]
   run grep -niwE "$LINEAGE" "$h/mise.toml"
@@ -86,7 +86,7 @@ Notes are plaintext here."
   for line in "### The tiers — canonical list" "#### Tier 1 — free to change" "#### Tier 2 — propose, do not apply" \
               "#### Tier 3 — never, by any agent" "#### The two-key rule" "### The loosenings — canonical list" \
               "| # | Date | Grant | Applies to |" "### Read first" \
-              "<!-- house:roster -->" "<!-- house:rules -->" "<!-- house:read-first -->"; do
+              "<!-- house:roster -->" "<!-- house:read-first -->"; do
     grep -qxF -- "$line" "$h/AGENTS.md"
   done
   assert_file_contains "$h/AGENTS.md" "None granted yet."

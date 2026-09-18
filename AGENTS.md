@@ -25,9 +25,9 @@ here as in a live house:
 - **The scaffold only narrows by default.** A widening — an agent that may
   merge, push `main`, or act on relayed approval — is never the starting
   point. A house grants it as a dated row after it exists.
-- **The three markers** (`house:roster`, `house:rules`, `house:read-first`)
-  are load-bearing: `agent add` and `rules add` insert at them and `doctor`
-  checks for them. Rename one and every existing house fails `doctor`.
+- **The two markers** (`house:roster`, `house:read-first`) are
+  load-bearing: `agent add` inserts at them and `doctor` checks for them.
+  Rename one and every existing house fails `doctor`.
 - **A fresh house is complete.** The framework asserts; the owner supplies
   facts and grants widenings. `init` asks nothing: no `house:decide`
   marker exists in `scaffold/` or in a rendered house, no flag selects a
@@ -99,10 +99,10 @@ git diff --check
   `{{ env.X }}` have spaces and pass through untouched; keep it that way.
 - The scaffold's executables (`hooks/`, `.mise/tasks/`) must pass
   `bash -n`; the test task runs it.
-- `rules/` and `harness/` are the last menus in the tree, moved out of
-  `templates/` whole and awaiting their own removal
-  ([#15](https://github.com/olavostauros/house/issues/15)). Do
-  not add to them.
+- `harness/` is the last menu in the tree, moved out of `templates/` whole
+  and awaiting its own removal
+  ([#15](https://github.com/olavostauros/house/issues/15)). Do not add to
+  it.
 - Comments carry constraints, not narrative. No decorative separators.
 - Commit messages: conventional, no footers, no tool attribution.
 - When the scaffold changes and you know which house of the lineage its
