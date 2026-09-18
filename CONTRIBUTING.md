@@ -3,7 +3,7 @@
 house-framework is a small tool with a strict shape, so a change lands more
 easily when it is discussed before it is written.
 
-1. **Open an issue first.** Say what you would change and why. A skeleton
+1. **Open an issue first.** Say what you would change and why. A scaffold
    change alters the house every future owner gets; it is the framework's
    opinion, and an opinion is discussed before it is changed.
 2. **Branch in your fork and open a pull request into `main`.** One idea per

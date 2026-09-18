@@ -2,7 +2,7 @@
 
 HOUSE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOUSE_REPO_DIR="$(cd "$HOUSE_LIB_DIR/.." && pwd)"
-HOUSE_SKELETON="$HOUSE_REPO_DIR/skeleton"
+HOUSE_SCAFFOLD="$HOUSE_REPO_DIR/scaffold"
 HOUSEKEEPER=housekeeper
 
 say() { printf '%s\n' "$*"; }
@@ -264,7 +264,7 @@ add_agent() {
   roster_append "$house" "$name" "$role" "$owns" "$kind"
   say "roster: $name ($kind)"
 
-  render "$HOUSE_SKELETON/agent/$kind/note.md" "$house/notes/$name.md" "${vars[@]}"
+  render "$HOUSE_SCAFFOLD/agent/$kind/note.md" "$house/notes/$name.md" "${vars[@]}"
   say "create: notes/$name.md"
 
   insert_before_marker "$house/AGENTS.md" "<!-- house:roster -->" "$roster_line"
@@ -276,9 +276,9 @@ add_agent() {
     say "keep: $(display_path "$home_dir") already has an AGENTS.md"
   else
     mkdir -p "$home_dir"
-    render "$HOUSE_SKELETON/agent/$kind/AGENTS.md" "$home_dir/AGENTS.md" "${vars[@]}"
-    render "$HOUSE_SKELETON/agent/home/mise.toml" "$home_dir/mise.toml" "${vars[@]}"
-    render "$HOUSE_SKELETON/agent/home/SCRATCHPAD.md" "$home_dir/SCRATCHPAD.md" "${vars[@]}"
+    render "$HOUSE_SCAFFOLD/agent/$kind/AGENTS.md" "$home_dir/AGENTS.md" "${vars[@]}"
+    render "$HOUSE_SCAFFOLD/agent/home/mise.toml" "$home_dir/mise.toml" "${vars[@]}"
+    render "$HOUSE_SCAFFOLD/agent/home/SCRATCHPAD.md" "$home_dir/SCRATCHPAD.md" "${vars[@]}"
     [ -d "$home_dir/.git" ] || git -C "$home_dir" init -q -b main
     say "create: $(display_path "$home_dir") (AGENTS.md, mise.toml, SCRATCHPAD.md; local repo, no remote)"
   fi

@@ -238,7 +238,7 @@ These hold in every house, and `house doctor` checks the ones a script can:
 ```bash
 mise trust
 mise install
-mise run test                 # bats, and a syntax pass over the skeleton's executables
+mise run test                 # bats, and a syntax pass over the scaffold's executables
 git diff --check
 ```
 

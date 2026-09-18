@@ -6,8 +6,8 @@ set -euo pipefail
 printf '\n== bats ==\n'
 bats --print-output-on-failure test
 
-printf '\n== skeleton ==\n'
-for f in skeleton/house/hooks/* skeleton/house/.mise/tasks/*; do
+printf '\n== scaffold ==\n'
+for f in scaffold/house/hooks/* scaffold/house/.mise/tasks/*; do
   bash -n "$f"
 done
 echo ok

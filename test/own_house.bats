@@ -25,21 +25,21 @@ setup() {
   [ "$output" = "$REPO_DIR/lib/lineage-names" ]
 }
 
-@test "the framework has a skeleton, not templates: no menu, no .tmpl, and nothing that asks the owner" {
+@test "the framework has a scaffold, not templates: no menu, no .tmpl, and nothing that asks the owner" {
   [ ! -e "$REPO_DIR/templates" ]
   [ ! -e "$REPO_DIR/examples" ]
-  [ -d "$REPO_DIR/skeleton/house" ]
-  [ -d "$REPO_DIR/skeleton/agent" ]
-  run find "$REPO_DIR/skeleton" -name '*.tmpl'
+  [ -d "$REPO_DIR/scaffold/house" ]
+  [ -d "$REPO_DIR/scaffold/agent" ]
+  run find "$REPO_DIR/scaffold" -name '*.tmpl'
   [ -z "$output" ]
-  run grep -rl 'house:decide' "$REPO_DIR/skeleton" "$REPO_DIR/lib" "$REPO_DIR/.mise"
+  run grep -rl 'house:decide' "$REPO_DIR/scaffold" "$REPO_DIR/lib" "$REPO_DIR/.mise"
   [ -z "$output" ]
   run grep -rlE 'usage_(style|with|no_housekeeper|kind|no_home)\b' "$REPO_DIR/lib" "$REPO_DIR/.mise"
   [ -z "$output" ]
 }
 
-@test "every key in the skeleton names a fact, and AGENTS.md enumerates each one" {
-  run bash -c "grep -rohE '\{\{[A-Z_]+\}\}' '$REPO_DIR/skeleton' | sort -u | tr -d '{}'"
+@test "every key in the scaffold names a fact, and AGENTS.md enumerates each one" {
+  run bash -c "grep -rohE '\{\{[A-Z_]+\}\}' '$REPO_DIR/scaffold' | sort -u | tr -d '{}'"
   [ -n "$output" ]
   for key in $output; do
     case " $HOUSE_KEYS $AGENT_KEYS " in

@@ -65,7 +65,7 @@ fi
 
 PREEXISTING="$(git -C "$WORK" status --porcelain -- "$TARGET" 2>/dev/null || true)"
 
-install_tree "$HOUSE_SKELETON/house" "$TARGET" "${VARS[@]}"
+install_tree "$HOUSE_SCAFFOLD/house" "$TARGET" "${VARS[@]}"
 
 mise trust "$TARGET/mise.toml" >/dev/null
 

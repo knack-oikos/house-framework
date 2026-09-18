@@ -1,7 +1,7 @@
 # house-framework
 
 A tool repo, not a household. There is no roster here, no queue and no
-`notes/`; a house's notes come only from `skeleton/`, and the households
+`notes/`; a house's notes come only from `scaffold/`, and the households
 this shape was distilled from are named in `lib/lineage-names` and in git
 history, nowhere else. This file is the contract for this repository, for
 whoever's agent works on it — yours, under any harness or none, with no
@@ -12,17 +12,17 @@ this one governs the repo.
 
 ## What this repo must preserve
 
-`skeleton/house/` is the house every owner gets, byte for byte but for the
-facts, and `skeleton/house/AGENTS.md` is the contract every new house
+`scaffold/house/` is the house every owner gets, byte for byte but for the
+facts, and `scaffold/house/AGENTS.md` is the contract every new house
 starts from. The framework asserts the shape and the opinions; the owner
-supplies facts and, later, dated widenings. A change to the skeleton
+supplies facts and, later, dated widenings. A change to the scaffold
 changes the house every future owner gets, so the same discipline applies
 here as in a live house:
 
 - **The tiers, the two-key rule and the loosenings table stay whole and in
-  one place** in the skeleton's contract. Do not split them, summarise them
+  one place** in the scaffold's contract. Do not split them, summarise them
   elsewhere, or add a second copy in a home or a definition.
-- **The skeleton only narrows by default.** A widening — an agent that may
+- **The scaffold only narrows by default.** A widening — an agent that may
   merge, push `main`, or act on relayed approval — is never the starting
   point. A house grants it as a dated row after it exists.
 - **The three markers** (`house:roster`, `house:rules`, `house:read-first`)
@@ -30,7 +30,7 @@ here as in a live house:
   checks for them. Rename one and every existing house fails `doctor`.
 - **A fresh house is complete.** The framework asserts; the owner supplies
   facts and grants widenings. `init` asks nothing: no `house:decide`
-  marker exists in `skeleton/` or in a rendered house, no flag selects a
+  marker exists in `scaffold/` or in a rendered house, no flag selects a
   file, every house gets its housekeeper, and
   `house init x && house doctor --house x` exits 0. Where only the owner
   can answer — the owner's name — `init` takes the fact as an argument and
@@ -41,14 +41,14 @@ here as in a live house:
   (`KnickKnackLabs` outside `mise.toml` too), because those are the
   framework's and never the owner's text.
 - **Substitution is facts only, and the list is closed.** A key in a
-  skeleton file names a fact the house or the agent has; it never selects a
+  scaffold file names a fact the house or the agent has; it never selects a
   passage. The house facts are `{{HOUSE_NAME}}`, `{{HOUSE_UPPER}}`,
   `{{HOUSE_PATH}}`, `{{WORK_PATH}}`, `{{WORK_DIR_EXPR}}`, `{{PROJECT}}`,
   `{{CREATED}}` and `{{OWNER}}`; `{{AUTHOR_DOMAIN}}` is derived from the
   name; `{{PLACEMENT}}` is the one two-way structural fact, embedded or
   standalone. The agent facts are `{{AGENT}}`, `{{ROLE}}`, `{{OWNS}}`,
   `{{CHARGE}}`, `{{WORKSPACE_PATH}}` and `{{HOME_PATH}}`.
-  `test/own_house.bats` greps `skeleton/` and fails on any key outside
+  `test/own_house.bats` greps `scaffold/` and fails on any key outside
   this list, and on any key in this list that this paragraph does not
   name. A key that would select text is a template, and templates are
   refused.
@@ -60,15 +60,15 @@ here as in a live house:
   people who have never heard of the households it grew out of. Personal
   names and lineage names appear in `lib/lineage-names` alone, the list
   `doctor` reads to reject the house names in a generated house. Usage
-  examples, help text, the skeleton and the tests use generic names
+  examples, help text, the scaffold and the tests use generic names
   (`example`, `builder`, `Your Name`) and paths that mean the same on
   every machine. No harness is named outside `harness/` and
   `.mise/tasks/export/`. The repo-wide test in `test/own_house.bats` greps
   every file but that one for every name on the list and fails on any
   other mention; the one personal string it allows is the address of this
   repository, which a house's README links.
-- **The housekeeper stays voiceless, singular and named.** Its skeleton
-  (`skeleton/agent/housekeeper/`, and each harness's
+- **The housekeeper stays voiceless, singular and named.** Its scaffold
+  (`scaffold/agent/housekeeper/`, and each harness's
   `definition.housekeeper`) states that it has no GitHub identity and no
   mail by design, and the contract's Tooling clause excludes it from any
   identity entry the owner files. Its name is the constant `HOUSEKEEPER`
@@ -83,20 +83,20 @@ here as in a live house:
   settings file back into the contract, the notes, the homes or the library.
 - **Generated files are never overwritten.** `install_tree`, `agent add` and
   every exporter keep what exists and say so (`export` takes `--force`). A
-  change to the skeleton reaches an existing house only by hand, in that
+  change to the scaffold reaches an existing house only by hand, in that
   house's own turn.
 
 ## Working here
 
 ```bash
-mise run test        # bats, and a syntax pass over the skeleton's executables
+mise run test        # bats, and a syntax pass over the scaffold's executables
 git diff --check
 ```
 
 - Skeleton files carry `{{KEY}}` — uppercase, no spaces, one of the facts
   listed above and nothing else. mise's own `{{ config_root }}` and
   `{{ env.X }}` have spaces and pass through untouched; keep it that way.
-- The skeleton's executables (`hooks/`, `.mise/tasks/`) must pass
+- The scaffold's executables (`hooks/`, `.mise/tasks/`) must pass
   `bash -n`; the test task runs it.
 - `rules/` and `harness/` are the last menus in the tree, moved out of
   `templates/` whole and awaiting their own removal
@@ -104,6 +104,6 @@ git diff --check
   not add to them.
 - Comments carry constraints, not narrative. No decorative separators.
 - Commit messages: conventional, no footers, no tool attribution.
-- When the skeleton changes and you know which house of the lineage its
+- When the scaffold changes and you know which house of the lineage its
   practice came from, say so in the commit; if you do not, say it is new.
   Nobody is expected to know.
