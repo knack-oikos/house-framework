@@ -29,11 +29,12 @@ setup() {
   [ ! -e "$REPO_DIR/templates" ]
   [ ! -e "$REPO_DIR/examples" ]
   [ ! -e "$REPO_DIR/rules" ]
+  [ ! -e "$REPO_DIR/harness" ]
   [ -d "$REPO_DIR/scaffold/house" ]
   [ -d "$REPO_DIR/scaffold/agent" ]
-  run find "$REPO_DIR/scaffold" -name '*.tmpl'
+  run find "$REPO_DIR" -path "$REPO_DIR/.git" -prune -o -name '*.tmpl' -print
   [ -z "$output" ]
-  run grep -rlE 'house:decide|house:rules|rules add' "$REPO_DIR/scaffold" "$REPO_DIR/lib" "$REPO_DIR/.mise"
+  run grep -rlE 'house:decide|house:rules|rules add|house export|HOUSE_DEFINITIONS_DIR|harness/' "$REPO_DIR/scaffold" "$REPO_DIR/lib" "$REPO_DIR/.mise"
   [ -z "$output" ]
   run grep -rlE 'usage_(style|with|no_housekeeper|kind|no_home)\b' "$REPO_DIR/lib" "$REPO_DIR/.mise"
   [ -z "$output" ]
