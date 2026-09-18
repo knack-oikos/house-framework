@@ -44,10 +44,11 @@ here as in a live house:
   scaffold file names a fact the house or the agent has; it never selects a
   passage. The house facts are `{{HOUSE_NAME}}`, `{{HOUSE_UPPER}}`,
   `{{HOUSE_PATH}}`, `{{WORK_PATH}}`, `{{WORK_DIR_EXPR}}`, `{{PROJECT}}`,
-  `{{CREATED}}` and `{{OWNER}}`; `{{AUTHOR_DOMAIN}}` is derived from the
-  name; `{{PLACEMENT}}` is the one two-way structural fact, embedded or
-  standalone. The agent facts are `{{AGENT}}`, `{{ROLE}}`, `{{OWNS}}`,
-  `{{CHARGE}}`, `{{WORKSPACE_PATH}}` and `{{HOME_PATH}}`.
+  `{{CREATED}}`, `{{FRAMEWORK_VERSION}}` and `{{OWNER}}`;
+  `{{AUTHOR_DOMAIN}}` is derived from the name; `{{PLACEMENT}}` is the one
+  two-way structural fact, embedded or standalone. The agent facts are
+  `{{AGENT}}`, `{{ROLE}}`, `{{OWNS}}`, `{{CHARGE}}`, `{{WORKSPACE_PATH}}`
+  and `{{HOME_PATH}}`.
   `test/own_house.bats` greps `scaffold/` and fails on any key outside
   this list, and on any key in this list that this paragraph does not
   name. A key that would select text is a template, and templates are

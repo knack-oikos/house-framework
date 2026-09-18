@@ -35,16 +35,71 @@ switch on, in your own turn.
 
 ## Prerequisites
 
-- [git](https://git-scm.com)
-- bash
-- [mise](https://mise.jdx.dev), which runs the tasks and installs the one
-  other tool: `mise install` brings
-  [bats](https://github.com/bats-core/bats-core), the test runner, from the
-  registry `mise.toml` names
+To run `house`:
 
-No GitHub CLI, no package manager beyond mise, and no agent harness.
+- bash 4 or newer, first on `PATH`
+- [git](https://git-scm.com) 2.28 or newer, with `user.name` and `user.email`
+  set: `house init` makes a bootstrap commit
+- curl, jq, CA certificates for HTTPS, and `sha256sum` or `shasum`: shiv's
+  installer refuses without curl, git and jq; mise's installer checks its
+  download with a sha tool; the `house` shim resolves `house agent add` to
+  `agent:add` through jq
+- [shiv](https://github.com/KnickKnackLabs/shiv), which installs
+  [mise](https://mise.jdx.dev) if it is absent; mise runs every `house`
+  command, and `mise install` in the clone brings
+  [bats](https://github.com/bats-core/bats-core), the test runner, from the
+  registry `mise.toml` names — the one tool the clone declares
+
+To live in a house: git, bash and mise. A generated house's own tasks never
+call shiv, and `house doctor` checks the list above — the bash and git
+versions, the git identity, mise and jq on `PATH` — and prints the fix for
+each line it fails.
+
+The list is established, not asserted: on every pull request, a CI job
+starts from a `debian:stable-slim` image with only those packages, runs the
+shiv installer, installs `house` from the checkout under test, and runs
+`house init` and `house doctor` there.
 
 ## Install
+
+```bash
+curl -fsSL shiv.knacklabs.co/install.sh | bash   # installs mise too, if absent
+mkdir -p ~/.config/shiv/sources                  # source file: see below
+echo '{"house": "olavostauros/house-framework"}' > ~/.config/shiv/sources/house.json
+MISE_JOBS=1 shiv install house                   # serial: see below
+house --version
+```
+
+Restart the shell once after the first line: the installer adds a line to
+your shell rc and needs it. The source file is needed until `house` is in
+shiv's own index
+([KnickKnackLabs/shiv#176](https://github.com/KnickKnackLabs/shiv/pull/176)
+is the request): without it, `shiv install house` stops at `'house' not
+found in package index`. Once that merges, the two source-file lines go; a
+fork under another name stays the same one line away from being installable
+as `house` for its owner.
+
+Bare `shiv install house` takes the newest release tag; `shiv install
+house@main` tracks `main`, `shiv install house@v0.1.0` pins, and `shiv
+update house` moves an install to the newest release. `house --version` is
+what a bug report quotes: the tag at the install's `HEAD`, else its short
+commit, then the branch and the age of the last commit. `house version` is
+the same tag or short commit from the inside, and it is what a house
+records when it is made.
+
+Three things to know about the chain before running it. The installer
+`eval`s a terminal-UI library fetched over the network at run time, and
+falls back silently when the fetch fails. The installer does not install
+shiv's own tools; the first `shiv` command does, and two of them
+(`shiv:codebase`, `shiv:readme`) race on the backend's clone when mise
+installs them side by side
+([KnickKnackLabs/vfox-shiv#22](https://github.com/KnickKnackLabs/vfox-shiv/issues/22)),
+which on a clean machine fails every time — `MISE_JOBS=1` on that first
+command serializes them, and the CI job below runs the chain that way. And
+those two are floating `shiv:` ranges in shiv's own `mise.toml`; they are
+shiv's, not a house's, and `doctor` does not read them.
+
+### From a checkout
 
 ```bash
 git clone https://github.com/olavostauros/house-framework
@@ -54,25 +109,18 @@ cd house-framework && mise trust && mise install
 `mise trust` is asked once, because `mise.toml` sets tool and task settings
 for this directory. Every `house` command in this README is a `mise run`
 task of this checkout (`house init` is `mise run init`, `house agent add` is
-`mise run agent:add`), which is how CI runs it:
+`mise run agent:add`, `house version` is `mise run version`), which is how
+CI runs it:
 
 ```bash
 mise run init example --at /path/to/example
 ```
 
-If you use [shiv](https://github.com/KnickKnackLabs/shiv), register the
-checkout as a package so `house` resolves from anywhere; this is optional:
+To put a working clone on `PATH` as `house` — the way to try the shim
+against a branch — register the checkout itself as a local-path package:
 
 ```bash
 shiv install house "$PWD"
-```
-
-To pin a release instead of tracking `main`, check the tag out before
-either form — shiv installs from the working tree and reports the tag
-through `house --version`. `v0.1.0` is the first:
-
-```bash
-git checkout v0.1.0
 ```
 
 ## Quick start
@@ -115,7 +163,7 @@ the bootstrap commit names the households it was distilled from, and
 | `hooks/agent-identity` | pre-commit guard: refuses an author not on the roster unless `<HOUSE>_OWNER_COMMIT=1` |
 | `.mise/tasks/{welcome,test,agent-env,install-hooks}` | the task surface; `agent-env` sets `<name>@<house>.invalid` as the git author, a label on a reserved name that claims no domain |
 | `test/*.bats` | the house's own checks, roster-driven so they stay true as agents join |
-| `mise.toml`, `README.md`, `.gitignore` | the rest; the README carries the one line of attribution a house keeps, `Started from house-framework on <date>` |
+| `mise.toml`, `README.md`, `.gitignore` | the rest; the README carries the one line of attribution a house keeps, `Started from house-framework on <date>, at <version>` — the version `house version` printed when the house was made, which `house doctor` reads back against the version checking it |
 
 A standalone house gets its own repo and a bootstrap commit, which is where
 the framework's name goes. An embedded house is a directory of the project
@@ -239,8 +287,15 @@ These hold in every house, and `house doctor` checks the ones a script can:
 mise trust
 mise install
 mise run test                 # bats, and a syntax pass over the scaffold's executables
+mise run version              # what a house made from this checkout records
 git diff --check
 ```
+
+`test` is hidden from the shim's surface (`hide = true` in its header), so
+`house test` is not a command and `mise run test` is; the user-facing
+surface is `init`, `doctor`, `version`, `agent add`, `rules add` and
+`export <harness>`. How a release is cut is in
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 The tests scaffold houses into temporary directories with `HOUSE_AGENTS_ROOT`
 and `HOUSE_DEFINITIONS_DIR` pointed away from your real `~/agents` and from

@@ -4,7 +4,7 @@ listed_names() {
   awk -v kind="${1:-}" 'kind == "" || $1 == kind { print $2 }' "$REPO_DIR/lib/lineage-names" | paste -sd '|'
 }
 
-HOUSE_KEYS="HOUSE_NAME HOUSE_UPPER HOUSE_PATH WORK_PATH WORK_DIR_EXPR PROJECT CREATED OWNER AUTHOR_DOMAIN PLACEMENT"
+HOUSE_KEYS="HOUSE_NAME HOUSE_UPPER HOUSE_PATH WORK_PATH WORK_DIR_EXPR PROJECT CREATED FRAMEWORK_VERSION OWNER AUTHOR_DOMAIN PLACEMENT"
 AGENT_KEYS="AGENT ROLE OWNS CHARGE WORKSPACE_PATH HOME_PATH"
 
 setup() {
@@ -68,6 +68,7 @@ setup() {
   [ "$status" -eq 1 ]
   [ "$(grep -rh 'house-framework' --exclude-dir=.git "$h" "$AGENTS_ROOT" | wc -l)" -eq 1 ]
   assert_file_contains "$h/README.md" "Started from [house-framework](https://github.com/olavostauros/house-framework)"
+  assert_file_contains "$h/README.md" "on $(date +%Y-%m-%d), at $(house version)."
   [ "$(git -C "$h" log -1 --format=%s)" = "hearth: bootstrap the household from house-framework" ]
 }
 

@@ -61,7 +61,7 @@ setup() {
 @test "doctor is quiet once the guard is installed and an agent has everything, and never looks for a harness" {
   in_house "$H" install-hooks >/dev/null
   house agent add vulcan --house "$H" --role backend --owns server/ >/dev/null
-  run house doctor --house "$H"
+  run env PATH="$PATH:$HOME/.local/bin" bash -c 'house "$@"' _ doctor --house "$H"
   assert_success
   assert_output_contains "ok:   housekeeper: home at $AGENTS_ROOT/hearth/home"
   assert_output_contains "ok:   vulcan: notes/vulcan.md"

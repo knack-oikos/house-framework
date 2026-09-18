@@ -189,6 +189,26 @@ today() {
   printf '%s\n' "${HOUSE_TODAY:-$(date +%Y-%m-%d)}"
 }
 
+framework_version() {
+  if [ -n "${HOUSE_FRAMEWORK_VERSION:-}" ]; then
+    printf '%s\n' "$HOUSE_FRAMEWORK_VERSION"
+    return
+  fi
+  if [ "$(git -C "$HOUSE_REPO_DIR" rev-parse --show-toplevel 2>/dev/null)" = "$(cd "$HOUSE_REPO_DIR" && pwd -P)" ]; then
+    git -C "$HOUSE_REPO_DIR" describe --tags --exact-match HEAD 2>/dev/null \
+      || git -C "$HOUSE_REPO_DIR" rev-parse --short HEAD 2>/dev/null \
+      && return
+  fi
+  printf 'unknown\n'
+}
+
+house_framework_version() {
+  [ -f "$1/README.md" ] || return 0
+  tr '\n' ' ' < "$1/README.md" \
+    | grep -oE 'Started from \[house-framework\]\([^)]*\) on [0-9-]+, at [^ ]+\.' \
+    | sed 's/.*, at //; s/\.$//' | head -1 || true
+}
+
 capitalize() {
   printf '%s' "$1" | sed 's/^./\U&/'
 }
@@ -290,4 +310,33 @@ lineage_names() {
   while IFS= read -r name; do
     case "$own" in *" $name "*) ;; *) printf '%s\n' "$name" ;; esac
   done < <(awk '$1 == "house" { print $2 }' "$HOUSE_LIB_DIR/lineage-names")
+}
+
+bash_version() {
+  bash --version 2>/dev/null | sed -n '1s/.*version \([0-9][0-9.]*\).*/\1/p'
+}
+
+git_version() {
+  git --version 2>/dev/null | sed -n '1s/^git version \([0-9][0-9.]*\).*/\1/p'
+}
+
+version_at_least() {
+  local have_major have_minor want_major want_minor
+  IFS=. read -r have_major have_minor _ <<< "$1"
+  IFS=. read -r want_major want_minor _ <<< "$2"
+  [ "${have_major:-0}" -gt "${want_major:-0}" ] \
+    || { [ "${have_major:-0}" -eq "${want_major:-0}" ] && [ "${have_minor:-0}" -ge "${want_minor:-0}" ]; }
+}
+
+git_identity() {
+  local dir="$1" key="$2" value=""
+  case "$key" in
+    name)  value="${GIT_AUTHOR_NAME:-${GIT_COMMITTER_NAME:-}}" ;;
+    email) value="${GIT_AUTHOR_EMAIL:-${GIT_COMMITTER_EMAIL:-}}" ;;
+  esac
+  [ -n "${value:-$(git -C "$dir" config "user.$key" 2>/dev/null || true)}" ]
+}
+
+on_path() {
+  case ":$PATH:" in *":$1:"*) ;; *) return 1 ;; esac
 }
