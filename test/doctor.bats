@@ -99,11 +99,11 @@ setup() {
 }
 
 @test "doctor fails when a marker or an authority section is gone" {
-  sed -i '/^<!-- house:rules -->$/d' "$H/AGENTS.md"
+  sed -i '/^<!-- house:read-first -->$/d' "$H/AGENTS.md"
   sed -i 's/^#### The two-key rule$/#### Two keys/' "$H/AGENTS.md"
   run house doctor --house "$H"
   assert_failure
-  assert_output_contains "lacks marker <!-- house:rules -->"
+  assert_output_contains "lacks marker <!-- house:read-first -->"
   assert_output_contains "lacks section: #### The two-key rule"
 }
 

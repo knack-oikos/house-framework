@@ -15,7 +15,7 @@ setup() {
 }
 
 @test "the contract keeps its markers and its authority sections" {
-  for marker in "<!-- house:roster -->" "<!-- house:rules -->" "<!-- house:read-first -->"; do
+  for marker in "<!-- house:roster -->" "<!-- house:read-first -->"; do
     grep -qxF "$marker" "$HOUSE/AGENTS.md"
   done
   grep -qxF "### The tiers — canonical list" "$HOUSE/AGENTS.md"
