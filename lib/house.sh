@@ -2,8 +2,7 @@
 
 HOUSE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOUSE_REPO_DIR="$(cd "$HOUSE_LIB_DIR/.." && pwd)"
-HOUSE_TEMPLATES="$HOUSE_REPO_DIR/templates"
-HOUSE_PRESETS="$HOUSE_TEMPLATES/preset"
+HOUSE_SKELETON="$HOUSE_REPO_DIR/skeleton"
 HOUSEKEEPER=housekeeper
 
 say() { printf '%s\n' "$*"; }
@@ -80,10 +79,7 @@ install_tree() {
   local src rel dest
   while IFS= read -r src; do
     rel="${src#"$src_root"/}"
-    case "$rel" in
-      *.tmpl) dest="$dest_root/${rel%.tmpl}" ;;
-      *)      dest="$dest_root/$rel" ;;
-    esac
+    dest="$dest_root/$rel"
     if [ -e "$dest" ]; then
       say "keep: ${dest#"$dest_root"/}"
       continue
@@ -146,15 +142,19 @@ roster_field() {
   awk -F '\t' -v n="$2" -v f="$3" '!/^#/ && $1 == n { print $f; exit }' "$1/roster.tsv"
 }
 
-roster_kind() {
-  local house="$1" name="$2" kind owns
-  kind="$(roster_field "$house" "$name" 4)"
-  if [ -n "$kind" ]; then printf '%s\n' "$kind"; return; fi
-  owns="$(roster_field "$house" "$name" 3)"
+agent_kind() {
+  local name="$1" owns="$2"
   if [ "$name" = "$HOUSEKEEPER" ]; then printf 'housekeeper\n'
   elif [ -n "$owns" ]; then printf 'builder\n'
   else printf 'judge\n'
   fi
+}
+
+roster_kind() {
+  local house="$1" name="$2" kind
+  kind="$(roster_field "$house" "$name" 4)"
+  if [ -n "$kind" ]; then printf '%s\n' "$kind"; return; fi
+  agent_kind "$name" "$(roster_field "$house" "$name" 3)"
 }
 
 roster_has_kind() {
@@ -207,25 +207,18 @@ signing_describe() {
 }
 
 add_agent() {
-  local house="$1" name="$2" role="$3" owns="$4" charge="$5" kind="$6" no_home="$7"
-  local house_name house_upper project work workspace home_dir roster_line
+  local house="$1" name="$2" role="$3" owns="$4" charge="$5"
+  local kind house_name house_upper project work workspace home_dir roster_line
 
   validate_name "agent name" "$name"
-  case "$kind" in builder|judge|housekeeper) ;; *) die "unknown agent kind: $kind" ;; esac
-  if [ "$kind" = housekeeper ] && [ "$name" != "$HOUSEKEEPER" ]; then
-    die "the housekeeper is named $HOUSEKEEPER; it is the house's own voice and has no other name"
-  fi
-  if [ "$name" = "$HOUSEKEEPER" ] && [ "$kind" != housekeeper ]; then
-    die "$HOUSEKEEPER is the housekeeper's name; pick another for a $kind"
-  fi
+  kind="$(agent_kind "$name" "$owns")"
+  if [ "$kind" = housekeeper ] && [ -n "$owns" ]; then die "the housekeeper owns no directory; drop --owns"; fi
   if roster_has "$house" "$name"; then
     die "$name is already on the roster of $(display_path "$house")"
   fi
   if [ "$kind" = housekeeper ] && roster_has_kind "$house" housekeeper; then
     die "$(display_path "$house") already has a housekeeper; a house has exactly one"
   fi
-  if [ "$kind" = builder ] && [ -z "$owns" ]; then die "a builder must --owns a directory"; fi
-  if [ "$kind" != builder ] && [ -n "$owns" ]; then die "a $kind owns no directory; drop --owns"; fi
 
   house_name="$(house_name "$house")"
   house_upper="$(upper_env "$house_name")"
@@ -271,7 +264,7 @@ add_agent() {
   roster_append "$house" "$name" "$role" "$owns" "$kind"
   say "roster: $name ($kind)"
 
-  render "$HOUSE_TEMPLATES/agent/note.$kind.md.tmpl" "$house/notes/$name.md" "${vars[@]}"
+  render "$HOUSE_SKELETON/agent/$kind/note.md" "$house/notes/$name.md" "${vars[@]}"
   say "create: notes/$name.md"
 
   insert_before_marker "$house/AGENTS.md" "<!-- house:roster -->" "$roster_line"
@@ -279,25 +272,16 @@ add_agent() {
     "| act as $name for the first time in a session | [\`notes/$name.md\`](notes/$name.md) |"
   say "update: AGENTS.md (roster, read-first)"
 
-  if [ "$no_home" != "true" ]; then
-    if [ -e "$home_dir/AGENTS.md" ]; then
-      say "keep: $(display_path "$home_dir") already has an AGENTS.md"
-    else
-      mkdir -p "$home_dir"
-      render "$HOUSE_TEMPLATES/agent/home/AGENTS.$kind.md.tmpl" "$home_dir/AGENTS.md" "${vars[@]}"
-      render "$HOUSE_TEMPLATES/agent/home/mise.toml.tmpl" "$home_dir/mise.toml" "${vars[@]}"
-      render "$HOUSE_TEMPLATES/agent/home/SCRATCHPAD.md.tmpl" "$home_dir/SCRATCHPAD.md" "${vars[@]}"
-      [ -d "$home_dir/.git" ] || git -C "$home_dir" init -q -b main
-      say "create: $(display_path "$home_dir") (AGENTS.md, mise.toml, SCRATCHPAD.md; local repo, no remote)"
-    fi
+  if [ -e "$home_dir/AGENTS.md" ]; then
+    say "keep: $(display_path "$home_dir") already has an AGENTS.md"
+  else
+    mkdir -p "$home_dir"
+    render "$HOUSE_SKELETON/agent/$kind/AGENTS.md" "$home_dir/AGENTS.md" "${vars[@]}"
+    render "$HOUSE_SKELETON/agent/home/mise.toml" "$home_dir/mise.toml" "${vars[@]}"
+    render "$HOUSE_SKELETON/agent/home/SCRATCHPAD.md" "$home_dir/SCRATCHPAD.md" "${vars[@]}"
+    [ -d "$home_dir/.git" ] || git -C "$home_dir" init -q -b main
+    say "create: $(display_path "$home_dir") (AGENTS.md, mise.toml, SCRATCHPAD.md; local repo, no remote)"
   fi
-}
-
-style_names() {
-  local file
-  for file in "$HOUSE_TEMPLATES"/style/*.md; do
-    basename "$file" .md
-  done
 }
 
 lineage_names() {
@@ -306,66 +290,4 @@ lineage_names() {
   while IFS= read -r name; do
     case "$own" in *" $name "*) ;; *) printf '%s\n' "$name" ;; esac
   done < <(awk '$1 == "house" { print $2 }' "$HOUSE_LIB_DIR/lineage-names")
-}
-
-preset_names() {
-  local dir
-  for dir in "$HOUSE_PRESETS"/*/; do
-    basename "$dir"
-  done
-}
-
-parse_presets() {
-  local asked known name out=""
-  asked=" $(printf '%s' "$1" | tr ',' ' ') "
-  known="$(preset_names)"
-  for name in $asked; do
-    printf '%s\n' "$known" | grep -qx "$name" \
-      || die "unknown preset: $name (known: $(printf '%s' "$known" | tr '\n' ' '))"
-  done
-  while IFS= read -r name; do
-    case "$asked" in *" $name "*) out="$out $name" ;; esac
-  done <<< "$known"
-  printf '%s\n' "${out# }"
-}
-
-house_shiv_pins() {
-  sed -n 's/^"shiv:\([^"]*\)" = "\([^"]*\)".*$/\1\t\2/p' "$1/mise.toml"
-}
-
-exact_version() {
-  [[ "$1" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+([.+-][A-Za-z0-9.]+)?$ ]]
-}
-
-package_installed() {
-  local house="$1" pkg="$2" version="$3"
-  mise -C "$house" where "shiv:$pkg@$version" >/dev/null 2>&1
-}
-
-notes_dir_rel() {
-  local house="$1" work="$2"
-  if [ "$house" = "$work" ]; then printf 'notes\n'; else printf '%s/notes\n' "${house#"$work"/}"; fi
-}
-
-notes_attribute_set() {
-  local house="$1" work="$2"
-  grep -F "$(notes_dir_rel "$house" "$work")/**" "$work/.gitattributes" 2>/dev/null | grep -q 'filter=git-crypt'
-}
-
-notes_key_present() {
-  [ -d "$1/.git-crypt/keys/default" ]
-}
-
-notes_encrypted() {
-  notes_attribute_set "$1" "$2" && notes_key_present "$2"
-}
-
-notes_setup_command() {
-  local house="$1" work="$2" cmd="notes setup --gpg-key <fingerprint>"
-  [ "$house" = "$work" ] || cmd="$cmd --dir $(notes_dir_rel "$house" "$work")"
-  printf 'cd %s && %s\n' "$(display_path "$work")" "$cmd"
-}
-
-agent_list_expected() {
-  roster_agents "$1" | grep -vx "$HOUSEKEEPER" || true
 }

@@ -1,3 +1,0 @@
-# name	role	owns	kind
-housekeeper	housekeeping		housekeeper
-builder	implementation	src/	builder

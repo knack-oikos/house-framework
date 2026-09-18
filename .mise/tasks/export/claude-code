@@ -15,7 +15,7 @@ TO="${usage_to:-${HOUSE_DEFINITIONS_DIR:-$HOME/.claude/agents}}"
 TO="$(resolve_path "$TO")"
 FORCE="${usage_force:-false}"
 ONLY="${usage_agent:-}"
-TEMPLATES="$HOUSE_TEMPLATES/harness/claude-code"
+TEMPLATES="$HOUSE_REPO_DIR/harness/claude-code"
 
 house_name="$(house_name "$HOUSE")"
 project="$(house_project "$HOUSE")"

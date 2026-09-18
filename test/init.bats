@@ -81,12 +81,12 @@ load test_helper
   assert_output_contains "== welcome smoke =="
 }
 
-@test "a fresh house's welcome reports an empty roster and a missing guard" {
-  house init hearth --at "$BATS_TEST_TMPDIR/hearth" --no-housekeeper
+@test "a fresh house's welcome reports the housekeeper on the roster and a missing guard" {
+  house init hearth --at "$BATS_TEST_TMPDIR/hearth"
   run env -u GIT_AUTHOR_NAME bash -c 'in_house "$@"' _ "$BATS_TEST_TMPDIR/hearth" welcome
   assert_success
   assert_output_contains "not activated"
-  assert_output_contains "nobody yet"
+  [[ "$output" == *"== roster =="$'\n'"housekeeper "* ]]
   assert_output_contains "pre-commit guard: missing"
   assert_output_contains "nothing queued"
 }
@@ -104,7 +104,7 @@ load test_helper
 
 @test "init names the committer identity when the config signs with no user.signingkey" {
   signing_env
-  export GIT_CONFIG_COUNT=2
+  export GIT_CONFIG_COUNT=3
   run house init hearth --at "$BATS_TEST_TMPDIR/hearth"
   assert_success
   assert_output_contains "sign: the bootstrap commit is signed (openpgp, no user.signingkey — picked by the committer identity house test <house-test@example.invalid>)"
@@ -133,7 +133,7 @@ load test_helper
   assert_output_contains "commits here: signed (openpgp, key 0123456789ABCDEF)"
   assert_output_contains "signed with this same key"
   assert_output_contains "stop and report"
-  export GIT_CONFIG_COUNT=2
+  export GIT_CONFIG_COUNT=3
   run in_house "$BATS_TEST_TMPDIR/hearth" welcome
   assert_success
   assert_output_contains "commits here: signed (openpgp, key unset; picked by the committer identity)"
@@ -190,20 +190,12 @@ load test_helper
   assert_success
 }
 
-@test "init --no-housekeeper leaves the roster empty and says so in the contract" {
-  house init hearth --at "$BATS_TEST_TMPDIR/hearth" --no-housekeeper
-  h="$BATS_TEST_TMPDIR/hearth"
-  [ "$(awk -F '\t' '!/^#/ && NF' "$h/roster.tsv" | wc -l)" -eq 0 ]
-  assert_file_contains "$h/AGENTS.md" "This house has no housekeeper"
-  [ ! -e "$AGENTS_ROOT/hearth" ]
-}
-
 @test "init refuses a house whose name already keeps a housekeeper home" {
   house init hearth --at "$BATS_TEST_TMPDIR/hearth"
   run house init hearth --at "$BATS_TEST_TMPDIR/elsewhere/hearth"
   assert_failure
   assert_output_contains "already exists"
-  assert_output_contains "--no-housekeeper"
+  assert_output_contains "Pick another name"
   [ ! -e "$BATS_TEST_TMPDIR/elsewhere/hearth/AGENTS.md" ]
 }
 

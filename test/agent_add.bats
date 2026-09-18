@@ -1,59 +1,39 @@
 load test_helper
 
 setup() {
-  export CALLER="$BATS_TEST_TMPDIR/caller"
-  export AGENTS_ROOT="$BATS_TEST_TMPDIR/agents"
-  export DEFINITIONS_DIR="$BATS_TEST_TMPDIR/definitions"
-  export MISE_TRUSTED_CONFIG_PATHS="$BATS_TEST_TMPDIR"
-  export GIT_AUTHOR_NAME="house test"
-  export GIT_AUTHOR_EMAIL="house-test@example.invalid"
-  export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
-  export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
-  mkdir -p "$CALLER" "$AGENTS_ROOT" "$DEFINITIONS_DIR"
+  house_setup
   H="$BATS_TEST_TMPDIR/hearth"
-  house init hearth --at "$H" --project "the forge" --no-housekeeper >/dev/null
+  house init hearth --at "$H" --project "the forge" >/dev/null
 }
 
-@test "agent add housekeeper adds the housekeeper to a house created without it" {
-  run house agent add housekeeper --house "$H"
-  assert_success
-  assert_output_contains "roster: housekeeper (housekeeper)"
-  assert_output_contains "its first sweep is the house's first audit"
+@test "a fresh house already has its housekeeper, and there is one per house under one name" {
   grep -q $'^housekeeper\thousekeeping\t\thousekeeper$' "$H/roster.tsv"
   assert_file_contains "$H/notes/housekeeper.md" "The housekeeper of the forge"
   assert_file_contains "$AGENTS_ROOT/hearth/home/AGENTS.md" "the housekeeper of **the forge**"
   [ ! -e "$AGENTS_ROOT/housekeeper" ]
-}
-
-@test "the housekeeper has one name and there is one per house" {
-  run house agent add hestia --house "$H" --kind housekeeper
-  assert_failure
-  assert_output_contains "the housekeeper is named housekeeper"
-  run house agent add housekeeper --house "$H" --role tidying --kind judge
-  assert_failure
-  assert_output_contains "housekeeper is the housekeeper's name"
-  house agent add housekeeper --house "$H"
   run house agent add housekeeper --house "$H"
   assert_failure
   assert_output_contains "already on the roster"
-}
-
-@test "agent add refuses --owns on a judge or housekeeper and a builder without --owns" {
-  run house agent add loki --house "$H" --role tricks --kind judge --owns tricks/
+  run house agent add housekeeper --house "$H" --owns tidy/
   assert_failure
-  assert_output_contains "owns no directory"
-  run house agent add thor --house "$H" --role hammer --kind builder
+  assert_output_contains "the housekeeper owns no directory"
+  sed -i '/^housekeeper\t/d' "$H/roster.tsv"
+  printf 'hestia\thousekeeping\t\thousekeeper\n' >> "$H/roster.tsv"
+  run house agent add housekeeper --house "$H"
   assert_failure
-  assert_output_contains "must --owns"
+  assert_output_contains "already has a housekeeper; a house has exactly one"
 }
 
 @test "agent add puts a builder on the roster with note and home, and no harness file" {
   run house agent add vulcan --house "$H" --role backend --owns server/ --charge "Owns the schema and the API."
   assert_success
   assert_output_contains "roster: vulcan (builder)"
+  assert_output_contains "its Stance is the framework's for a builder"
 
   grep -q $'^vulcan\tbackend\tserver/\tbuilder$' "$H/roster.tsv"
   assert_file_contains "$H/notes/vulcan.md" "Owns \`$H/server/\`"
+  assert_file_contains "$H/notes/vulcan.md" "The failing case first, then the change, then the gates"
+  assert_file_says "$H/notes/vulcan.md" "Narrowing this stance is vulcan's; widening it is the owner's."
   assert_file_contains "$H/AGENTS.md" "- **vulcan** — backend. Owns \`server/\`: Owns the schema and the API."
   assert_file_contains "$H/AGENTS.md" "| act as vulcan for the first time in a session | [\`notes/vulcan.md\`](notes/vulcan.md) |"
 
@@ -69,17 +49,22 @@ setup() {
   [ -z "$(ls -A "$DEFINITIONS_DIR")" ]
   ! grep -rq '{{' "$H/notes/vulcan.md" "$AGENTS_ROOT/vulcan/home"
   ! grep -rqi 'claude' "$H" "$AGENTS_ROOT/vulcan/home"
+  ! grep -rq 'house:decide' "$H/notes/vulcan.md" "$AGENTS_ROOT/vulcan/home"
 }
 
 @test "agent add without --owns makes a judge" {
   run house agent add argus --house "$H" --role "review and security"
   assert_success
   assert_output_contains "roster: argus (judge)"
+  assert_output_contains "its Stance is the framework's for a judge"
   grep -q $'^argus\treview and security\t\tjudge$' "$H/roster.tsv"
   assert_file_contains "$H/AGENTS.md" "- **argus** — review and security. Owns no directory."
   assert_file_contains "$AGENTS_ROOT/argus/home/AGENTS.md" "You own no"
   assert_file_contains "$AGENTS_ROOT/argus/home/AGENTS.md" "stalls on its passphrase prompt is reported, not"
   assert_file_contains "$H/notes/argus.md" "Judgement, not patches"
+  assert_file_contains "$H/notes/argus.md" "The diff before the description, and the test before the diff"
+  assert_file_says "$H/notes/argus.md" "Narrowing this stance is argus's; widening it is the owner's."
+  ! grep -q 'house:decide' "$H/notes/argus.md"
 }
 
 @test "agent add refuses a duplicate and an agent with no role" {
@@ -92,11 +77,7 @@ setup() {
   assert_output_contains "--role is required"
 }
 
-@test "agent add honours --no-home and keeps a home that exists" {
-  run house agent add hermes --house "$H" --role messenger --no-home
-  assert_success
-  [ ! -e "$AGENTS_ROOT/hermes" ]
-
+@test "agent add keeps a home that exists" {
   mkdir -p "$AGENTS_ROOT/apollo/home"
   printf 'mine\n' > "$AGENTS_ROOT/apollo/home/AGENTS.md"
   run house agent add apollo --house "$H" --role music

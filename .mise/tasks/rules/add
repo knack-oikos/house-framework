@@ -10,8 +10,8 @@ source "$MISE_CONFIG_ROOT/lib/house.sh"
 
 SET="${usage_set:?a rule set name is required}"
 HOUSE="$(house_root "${usage_house:-.}")"
-SRC="$HOUSE_TEMPLATES/rules/$SET.md.tmpl"
-[ -f "$SRC" ] || die "no such rule set: $SET (have: $(ls "$HOUSE_TEMPLATES/rules" | sed 's/\.md\.tmpl$//' | tr '\n' ' '))"
+SRC="$HOUSE_REPO_DIR/rules/$SET.md.tmpl"
+[ -f "$SRC" ] || die "no such rule set: $SET (have: $(ls "$HOUSE_REPO_DIR/rules" | sed 's/\.md\.tmpl$//' | tr '\n' ' '))"
 
 BINDS="${usage_binds:-}"
 if [ -n "$BINDS" ]; then

@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
-#MISE description="Scaffold a household: contract, roster, queue, guard, and tasks"
+#MISE description="Scaffold a household: contract, roster, queue, style, guard, housekeeper and tasks"
 #USAGE arg "<name>" help="Household name, lowercase (for example: example)"
 #USAGE flag "--at <path>" help="Where to create it; defaults to ./<name>"
 #USAGE flag "--embedded" help="The house is a directory inside an existing project repo, not a repo of its own"
 #USAGE flag "--project <project>" help="What the household works on; defaults to the parent repo's name when embedded, else the house name"
-#USAGE flag "--owner <owner>" help="The owner's name as it appears in the contract; defaults to git user.name, and to a house:decide marker when that is unset"
-#USAGE flag "--style <name>" help="Render a house style as notes/house-style.md, wired to Read-first: strict"
-#USAGE flag "--no-housekeeper" help="Do not add the housekeeper agent"
+#USAGE flag "--owner <owner>" help="The owner's name as it appears in the contract; defaults to git user.name, and is required when that is unset"
 #USAGE flag "--no-commit" help="Leave the generated files uncommitted"
-#USAGE flag "--with <presets>" help="Comma-separated Knick Knack Labs packages to declare and wire: notes, shimmer"
 #USAGE example "house init example --at ~/project/example --embedded" header="A house inside the project it works on"
 #USAGE example "house init example --at ~/example --owner 'Your Name'" header="A standalone house that works on other repos"
-#USAGE example "house init example --at ~/example --with notes,shimmer --style strict" header="The same house on encrypted notes and shimmer, with the strict style"
 set -euo pipefail
 
 source "$MISE_CONFIG_ROOT/lib/house.sh"
@@ -21,26 +17,9 @@ validate_name "house name" "$NAME"
 UPPER="$(upper_env "$NAME")"
 EMBEDDED="${usage_embedded:-false}"
 AGENTS_ROOT="${HOUSE_AGENTS_ROOT:-$HOME/agents}"
-PRESETS="$(parse_presets "${usage_with:-}")"
-STYLE="${usage_style:-}"
-if [ -n "$STYLE" ]; then
-  style_names | grep -qx "$STYLE" || die "unknown style: $STYLE (known: $(style_names | tr '\n' ' '))"
-fi
 
 OWNER="${usage_owner:-$(git config user.name 2>/dev/null || true)}"
-if [ -n "$OWNER" ]; then
-  OWNER_CLAUSE="The owner is **$OWNER**: the one human here, who files the queue, merges, and alone widens a rule."
-else
-  OWNER_CLAUSE="<!-- house:decide: who the owner is — the one human here, who files the queue, merges, and alone widens a rule. Name them here. -->"
-fi
-
-if [ -n "$STYLE" ]; then
-  STYLE_CLAUSE="House style is [[house-style]]: read it before you commit, review, open a PR or end a session. It is the owner's, and it is practice, not authority."
-  STYLE_ROW='| commit, review, open a PR, or end a session | [`notes/house-style.md`](notes/house-style.md) |'$'\n'
-else
-  STYLE_CLAUSE='<!-- house:decide: house style. How this house merges (merge, squash or rebase), sizes a PR, reviews, comments, and leaves a session is the owner'"'"'s to write: as notes/house-style.md with its own row in Read-first, or by starting from a style another household wrote (house init --style <name>). Until then there is none, which is a fact and not a gap. -->'
-  STYLE_ROW=""
-fi
+[ -n "$OWNER" ] || die "the owner has no name: pass --owner '<name>', or set git config user.name"
 
 AUTHOR_DOMAIN="$NAME.invalid"
 
@@ -61,66 +40,20 @@ else
   PLACEMENT="This household is a repository of its own. The work happens in other repositories, cloned into each agent's workspace; the household is where the rules, the queue and the record of that work are kept."
 fi
 
-if [ "${usage_no_housekeeper:-false}" = "true" ]; then
-  HOUSEKEEPER_CLAUSE="This house has no housekeeper; the owner keeps the record true, and a later \`house agent add <name> --kind housekeeper\` changes that."
-else
-  taken="$AGENTS_ROOT/$NAME/home/AGENTS.md"
-  [ ! -e "$taken" ] || die "$(display_path "$taken") already exists — a house named $NAME already keeps its housekeeper there. Pick another name or pass --no-housekeeper"
-  HOUSEKEEPER_CLAUSE="The exception is **$HOUSEKEEPER**, the house's own voice, whose work is standing and needs no filing: keeping this record true. It carries no GitHub identity and no mail, by design, and speaks only to the owner in the session."
-fi
-
-SHARED_NOTES="$(cat "$HOUSE_TEMPLATES/fragments/shared-notes.plaintext.md")"
-NOTES_STATE="plaintext"
-NOTES_REL="$(notes_dir_rel "$TARGET" "$WORK")"
-NOTES_SETUP="$(notes_setup_command "$TARGET" "$WORK")"
-NOT_YET='no git-crypt on `notes/`, no per-agent GitHub identity
-or signing key, no mail, no chat, no CI wake-ups'
-PRESET_TOOLS=""
-PRESET_PLUGINS=""
-PRESET_WELCOME=""
-TOOLING_PRESETS=""
-for preset in $PRESETS; do
-  PRESET_TOOLS="$PRESET_TOOLS$(cat "$HOUSE_PRESETS/$preset/pin")"$'\n'
-  TOOLING_PRESETS="$TOOLING_PRESETS$(cat "$HOUSE_PRESETS/$preset/tooling.md")"$'\n'
-  PRESET_WELCOME="$PRESET_WELCOME"$'\n'"$(cat "$HOUSE_PRESETS/$preset/welcome.sh")"
-done
-if [ -n "$PRESETS" ]; then
-  PRESET_PLUGINS=$'\n[plugins]\nshiv = "https://github.com/KnickKnackLabs/vfox-shiv"\n'
-  PRESET_WELCOME=$'\n'"$(cat "$HOUSE_TEMPLATES/fragments/welcome-packages.sh")$PRESET_WELCOME"
-fi
-case " $PRESETS " in
-  *" notes "*)
-    SHARED_NOTES="$(cat "$HOUSE_PRESETS/notes/shared-notes.md")"
-    NOTES_STATE='encrypted with git-crypt through `notes`, once the owner has run `notes setup`'
-    NOT_YET='no per-agent GitHub identity or signing key, no mail,
-no chat, no CI wake-ups'
-    ;;
-esac
+taken="$AGENTS_ROOT/$NAME/home/AGENTS.md"
+[ ! -e "$taken" ] || die "$(display_path "$taken") already exists — a house named $NAME already keeps its housekeeper there. Pick another name"
 
 VARS=(
-  "SHARED_NOTES=$SHARED_NOTES"
-  "TOOLING_PRESETS=$TOOLING_PRESETS"
-  "PRESET_WELCOME=$PRESET_WELCOME"
-  "NOTES_STATE=$NOTES_STATE"
-  "NOTES_REL=$NOTES_REL"
-  "NOTES_SETUP=$NOTES_SETUP"
-  "NOT_YET=$NOT_YET"
-  "PRESET_TOOLS=$PRESET_TOOLS"
-  "PRESET_PLUGINS=$PRESET_PLUGINS"
-  "HOUSEKEEPER=$HOUSEKEEPER"
   "HOUSE_NAME=$NAME"
-  "HOUSEKEEPER_CLAUSE=$HOUSEKEEPER_CLAUSE"
-  "OWNER_CLAUSE=$OWNER_CLAUSE"
-  "STYLE_CLAUSE=$STYLE_CLAUSE"
-  "STYLE_ROW=$STYLE_ROW"
-  "AUTHOR_DOMAIN=$AUTHOR_DOMAIN"
   "HOUSE_UPPER=$UPPER"
   "HOUSE_PATH=$(display_path "$TARGET")"
   "WORK_PATH=$(display_path "$WORK")"
   "WORK_DIR_EXPR=$WORK_DIR_EXPR"
   "PROJECT=$PROJECT"
-  "PLACEMENT=$PLACEMENT"
   "CREATED=$(today)"
+  "AUTHOR_DOMAIN=$AUTHOR_DOMAIN"
+  "PLACEMENT=$PLACEMENT"
+  "OWNER=$OWNER"
 )
 
 NEW_REPO=false
@@ -132,27 +65,11 @@ fi
 
 PREEXISTING="$(git -C "$WORK" status --porcelain -- "$TARGET" 2>/dev/null || true)"
 
-install_tree "$HOUSE_TEMPLATES/house" "$TARGET" "${VARS[@]}"
-for preset in $PRESETS; do
-  say "preset: $preset"
-  if [ -d "$HOUSE_PRESETS/$preset/house" ]; then
-    install_tree "$HOUSE_PRESETS/$preset/house" "$TARGET" "${VARS[@]}"
-  fi
-done
-if [ -n "$STYLE" ]; then
-  if [ -e "$TARGET/notes/house-style.md" ]; then
-    say "keep: notes/house-style.md"
-  else
-    render "$HOUSE_TEMPLATES/style/$STYLE.md" "$TARGET/notes/house-style.md" "${VARS[@]}"
-    say "create: notes/house-style.md (style: $STYLE)"
-  fi
-fi
+install_tree "$HOUSE_SKELETON/house" "$TARGET" "${VARS[@]}"
 
 mise trust "$TARGET/mise.toml" >/dev/null
 
-if [ "${usage_no_housekeeper:-false}" != "true" ]; then
-  add_agent "$TARGET" "$HOUSEKEEPER" housekeeping "" "" housekeeper false
-fi
+add_agent "$TARGET" "$HOUSEKEEPER" housekeeping "" ""
 
 if [ "${usage_no_commit:-false}" = "true" ]; then
   say "skip: initial commit (--no-commit)"
@@ -161,7 +78,7 @@ elif [ "$NEW_REPO" = "true" ] && [ -z "$PREEXISTING" ]; then
     say "sign: the bootstrap commit is signed ($signing); a passphrase prompt that appears now is for it. --no-commit leaves the files for the owner to commit instead"
   fi
   git -C "$TARGET" add .
-  env "${UPPER}_OWNER_COMMIT=1" git -C "$TARGET" commit -q -m "$NAME: bootstrap the household from house-framework${STYLE:+, with the $STYLE style}"
+  env "${UPPER}_OWNER_COMMIT=1" git -C "$TARGET" commit -q -m "$NAME: bootstrap the household from house-framework"
   say "commit: bootstrap the household"
 else
   say "next: review the new files under $(display_path "$TARGET") and commit them as the owner"
@@ -169,12 +86,6 @@ fi
 
 say ""
 say "done: $NAME at $(display_path "$TARGET") (work tree: $(display_path "$WORK"))"
-say "next: house doctor --house $(display_path "$TARGET") names every house:decide marker: each is a question only the owner can answer, and the house is healthy once each is answered and the marker deleted"
 say "next: house agent add <name> --house $(display_path "$TARGET") --role '<role>' [--owns <dir>/]"
 say "next: cd $(display_path "$TARGET") && mise run install-hooks && mise run welcome"
 say "next: house export claude-code --house $(display_path "$TARGET") if the agents run under Claude Code"
-for preset in $PRESETS; do
-  if [ -f "$HOUSE_PRESETS/$preset/next" ]; then
-    say "$(render_string "$(cat "$HOUSE_PRESETS/$preset/next")" "${VARS[@]}")"
-  fi
-done

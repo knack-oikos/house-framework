@@ -22,7 +22,7 @@ in_house() {
 }
 export -f in_house
 
-setup() {
+house_setup() {
   export CALLER="$BATS_TEST_TMPDIR/caller"
   export AGENTS_ROOT="$BATS_TEST_TMPDIR/agents"
   export DEFINITIONS_DIR="$BATS_TEST_TMPDIR/definitions"
@@ -31,7 +31,12 @@ setup() {
   export GIT_AUTHOR_EMAIL="house-test@example.invalid"
   export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
   export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+  export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.name GIT_CONFIG_VALUE_0="$GIT_AUTHOR_NAME"
   mkdir -p "$CALLER" "$AGENTS_ROOT" "$DEFINITIONS_DIR"
+}
+
+setup() {
+  house_setup
 }
 
 make_project() {
@@ -57,10 +62,11 @@ esac
 EOF
   chmod +x "$fake"
   export FAKE_GPG_LOG="$BATS_TEST_TMPDIR/gpg.log"
-  export GIT_CONFIG_COUNT=3 \
-    GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=true \
-    GIT_CONFIG_KEY_1=gpg.program "GIT_CONFIG_VALUE_1=$fake" \
-    GIT_CONFIG_KEY_2=user.signingkey GIT_CONFIG_VALUE_2=0123456789ABCDEF
+  export GIT_CONFIG_COUNT=4 \
+    GIT_CONFIG_KEY_0=user.name GIT_CONFIG_VALUE_0="$GIT_AUTHOR_NAME" \
+    GIT_CONFIG_KEY_1=commit.gpgsign GIT_CONFIG_VALUE_1=true \
+    GIT_CONFIG_KEY_2=gpg.program "GIT_CONFIG_VALUE_2=$fake" \
+    GIT_CONFIG_KEY_3=user.signingkey GIT_CONFIG_VALUE_3=0123456789ABCDEF
 }
 
 assert_success() {
@@ -91,12 +97,9 @@ assert_file_contains() {
   }
 }
 
-make_theirs() {
-  local file
-  while IFS= read -r file; do
-    awk '/<!-- house:decide/ { skip = 1 } !skip { print } skip && /-->/ { skip = 0 }' "$file" > "$file.decided"
-    cat "$file.decided" > "$file"
-    rm "$file.decided"
-  done < <(grep -rl 'house:decide' --exclude-dir=.git "$1")
+assert_file_says() {
+  tr -s '\n' ' ' < "$1" | grep -qF -- "$2" || {
+    printf 'expected %s to say %s\n' "$1" "$2" >&2
+    return 1
+  }
 }
-export -f make_theirs
