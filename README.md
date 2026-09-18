@@ -1,4 +1,4 @@
-# house-framework
+# house
 
 **The starting point of a house of agents.**
 
@@ -16,8 +16,8 @@ true, and a set of checks. `house agent add` puts an agent on it, and
 `house doctor` measures the house against the shape every house shares.
 The command is `house`.
 
-house-framework is [MIT-licensed](LICENSE). A house it writes belongs to
-whoever generated it and is not bound by the framework's license.
+house is [MIT-licensed](LICENSE). A house it writes belongs to whoever
+generated it and is not bound by the framework's license.
 
 A house does not depend on any agent harness. Everything it generates is
 markdown, bash, git and `mise`; what a runner needs is already in the
@@ -65,7 +65,7 @@ shiv installer, installs `house` from the checkout under test, and runs
 ```bash
 curl -fsSL shiv.knacklabs.co/install.sh | bash   # installs mise too, if absent
 mkdir -p ~/.config/shiv/sources                  # source file: see below
-echo '{"house": "olavostauros/house-framework"}' > ~/.config/shiv/sources/house.json
+echo '{"house": "olavostauros/house"}' > ~/.config/shiv/sources/house.json
 MISE_JOBS=1 shiv install house                   # serial: see below
 house --version
 ```
@@ -102,8 +102,8 @@ shiv's, not a house's, and `doctor` does not read them.
 ### From a checkout
 
 ```bash
-git clone https://github.com/olavostauros/house-framework
-cd house-framework && mise trust && mise install
+git clone https://github.com/olavostauros/house
+cd house && mise trust && mise install
 ```
 
 `mise trust` is asked once, because `mise.toml` sets tool and task settings
@@ -163,7 +163,7 @@ the bootstrap commit names the households it was distilled from, and
 | `hooks/agent-identity` | pre-commit guard: refuses an author not on the roster unless `<HOUSE>_OWNER_COMMIT=1` |
 | `.mise/tasks/{welcome,test,agent-env,install-hooks}` | the task surface; `agent-env` sets `<name>@<house>.invalid` as the git author, a label on a reserved name that claims no domain |
 | `test/*.bats` | the house's own checks, roster-driven so they stay true as agents join |
-| `mise.toml`, `README.md`, `.gitignore` | the rest; the README carries the one line of attribution a house keeps, `Started from house-framework on <date>, at <version>` — the version `house version` printed when the house was made, which `house doctor` reads back against the version checking it |
+| `mise.toml`, `README.md`, `.gitignore` | the rest; the README carries the one line of attribution a house keeps, `Started from house on <date>, at <version>` — the version `house version` printed when the house was made, which `house doctor` reads back against the version checking it |
 
 A standalone house gets its own repo and a bootstrap commit, which is where
 the framework's name goes. An embedded house is a directory of the project
@@ -240,7 +240,7 @@ contract's "Domain rules" section says when to write one, and you write it
 there, in your own turn. `house rules add <set>` still inserts one of four
 shipped sets from `rules/`; the sets and the command are the last menu in
 this repository and are being removed
-([#15](https://github.com/olavostauros/house-framework/issues/15)).
+([#15](https://github.com/olavostauros/house/issues/15)).
 
 ## Harnesses
 
@@ -254,7 +254,7 @@ contract makes every such definition Tier 2.
 
 One exporter still ships, `house export claude-code`, from `harness/` and
 `.mise/tasks/export/`; it is the one place a runner is named and is being
-removed ([#15](https://github.com/olavostauros/house-framework/issues/15)).
+removed ([#15](https://github.com/olavostauros/house/issues/15)).
 
 ## Invariants
 

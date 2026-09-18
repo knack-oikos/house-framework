@@ -205,7 +205,7 @@ framework_version() {
 house_framework_version() {
   [ -f "$1/README.md" ] || return 0
   tr '\n' ' ' < "$1/README.md" \
-    | grep -oE 'Started from \[house-framework\]\([^)]*\) on [0-9-]+, at [^ ]+\.' \
+    | grep -oE 'Started from \[house\]\([^)]*\) on [0-9-]+, at [^ ]+\.' \
     | sed 's/.*, at //; s/\.$//' | head -1 || true
 }
 

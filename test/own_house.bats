@@ -13,7 +13,7 @@ setup() {
 }
 
 @test "the framework ships no household or personal name outside lib/lineage-names" {
-  run bash -c "grep -rniwE '$(listed_names)' --exclude-dir=.git --exclude=lineage-names '$REPO_DIR' | grep -v 'olavostauros/house-framework'"
+  run bash -c "grep -rniwE '$(listed_names)' --exclude-dir=.git --exclude=lineage-names '$REPO_DIR' | grep -vE 'olavostauros/house([^a-z0-9-]|$)'"
   [ -z "$output" ]
   [ "$(awk '$1 == "house"' "$REPO_DIR/lib/lineage-names" | wc -l)" -ge 1 ]
 }
@@ -58,7 +58,7 @@ setup() {
   house agent add vulcan --house "$h" --role backend --owns server/ >/dev/null
   house agent add argus --house "$h" --role review >/dev/null
   house rules add money --house "$h" --binds vulcan >/dev/null
-  run bash -c "grep -rniwE '$LINEAGE' --exclude-dir=.git --exclude=mise.toml '$h' '$AGENTS_ROOT' | grep -v 'olavostauros/house-framework'"
+  run bash -c "grep -rniwE '$LINEAGE' --exclude-dir=.git --exclude=mise.toml '$h' '$AGENTS_ROOT' | grep -vE 'olavostauros/house([^a-z0-9-]|$)'"
   [ -z "$output" ]
   run grep -niwE "$LINEAGE" "$h/mise.toml"
   [ "$output" = $'14:"aqua:KnickKnackLabs/bats-core" = "1.14.0-kkl.3"\n17:registries = ["https://github.com/KnickKnackLabs/bats-core"]' ]
@@ -66,10 +66,10 @@ setup() {
   [ "$status" -eq 1 ]
   run grep -rn 'Tier 3 for the whole house' "$h/AGENTS.md"
   [ "$status" -eq 1 ]
-  [ "$(grep -rh 'house-framework' --exclude-dir=.git "$h" "$AGENTS_ROOT" | wc -l)" -eq 1 ]
-  assert_file_contains "$h/README.md" "Started from [house-framework](https://github.com/olavostauros/house-framework)"
+  [ "$(grep -rho 'github.com/olavostauros/house' --exclude-dir=.git "$h" "$AGENTS_ROOT" | wc -l)" -eq 1 ]
+  assert_file_contains "$h/README.md" "Started from [house](https://github.com/olavostauros/house)"
   assert_file_contains "$h/README.md" "on $(date +%Y-%m-%d), at $(house version)."
-  [ "$(git -C "$h" log -1 --format=%s)" = "hearth: bootstrap the household from house-framework" ]
+  [ "$(git -C "$h" log -1 --format=%s)" = "hearth: bootstrap the household from house" ]
 }
 
 @test "the fresh contract holds the authority sections and three guard rules, asserts the merge rule, and wires the house style" {
