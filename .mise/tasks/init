@@ -79,7 +79,7 @@ elif [ "$NEW_REPO" = "true" ] && [ -z "$PREEXISTING" ]; then
     say "sign: the bootstrap commit is signed ($signing); a passphrase prompt that appears now is for it. --no-commit leaves the files for the owner to commit instead"
   fi
   git -C "$TARGET" add .
-  env "${UPPER}_OWNER_COMMIT=1" git -C "$TARGET" commit -q -m "$NAME: bootstrap the household from house-framework"
+  env "${UPPER}_OWNER_COMMIT=1" git -C "$TARGET" commit -q -m "$NAME: bootstrap the household from house"
   say "commit: bootstrap the household"
 else
   say "next: review the new files under $(display_path "$TARGET") and commit them as the owner"

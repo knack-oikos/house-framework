@@ -1,7 +1,7 @@
 # Contributing
 
-house-framework is a small tool with a strict shape, so a change lands more
-easily when it is discussed before it is written.
+house is a small tool with a strict shape, so a change lands more easily
+when it is discussed before it is written.
 
 1. **Open an issue first.** Say what you would change and why. A scaffold
    change alters the house every future owner gets; it is the framework's

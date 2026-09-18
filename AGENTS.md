@@ -1,4 +1,4 @@
-# house-framework
+# house
 
 A tool repo, not a household. There is no roster here, no queue and no
 `notes/`; a house's notes come only from `scaffold/`, and the households
@@ -57,7 +57,7 @@ here as in a live house:
   the one `bats` pin. A house that wants a package adds the pin, the
   wiring and the dated loosening row in its own turn; the contract's
   Tooling and Communication sections say how.
-- **This is a tool for strangers.** house-framework is public and meant for
+- **This is a tool for strangers.** house is public and meant for
   people who have never heard of the households it grew out of. Personal
   names and lineage names appear in `lib/lineage-names` alone, the list
   `doctor` reads to reject the house names in a generated house. Usage
@@ -101,7 +101,7 @@ git diff --check
   `bash -n`; the test task runs it.
 - `rules/` and `harness/` are the last menus in the tree, moved out of
   `templates/` whole and awaiting their own removal
-  ([#15](https://github.com/olavostauros/house-framework/issues/15)). Do
+  ([#15](https://github.com/olavostauros/house/issues/15)). Do
   not add to them.
 - Comments carry constraints, not narrative. No decorative separators.
 - Commit messages: conventional, no footers, no tool attribution.
