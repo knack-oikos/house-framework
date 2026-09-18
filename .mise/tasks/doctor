@@ -69,6 +69,10 @@ file_facts() {
   stat -c '%u %a %h' "$1" 2>/dev/null || stat -f '%u %Lp %l' "$1"
 }
 
+dir_facts() {
+  stat -L -c '%u %a' "$1" 2>/dev/null || stat -L -f '%u %Lp' "$1"
+}
+
 private_file() {
   local agent="$1" file="$2" shown uid mode links
   shown="$(display_path "$file")"
@@ -80,8 +84,8 @@ private_file() {
 }
 
 credentials() {
-  local agent="$1" dir="$2" identity="$2/identity.txt" vault="$2/vault.enc.yaml" uid mode _ recipient sound=1 tools=1
-  read -r uid mode _ < <(file_facts "$dir")
+  local agent="$1" dir="$2" identity="$2/identity.txt" vault="$2/vault.enc.yaml" uid mode recipient sound=1 tools=1
+  read -r uid mode < <(dir_facts "$dir")
   if [ "$uid" != "$(id -u)" ]; then fail "$agent: $(display_path "$dir") is not owned by you → chown $(id -un) $(display_path "$dir")"; sound=0
   elif (( 8#$mode & 8#022 )); then fail "$agent: $(display_path "$dir") is writable by others (mode $mode) → chmod 700 $(display_path "$dir")"; sound=0
   fi
@@ -92,6 +96,9 @@ credentials() {
   recipient="$(awk '/^# public key: / { print $4; exit }' "$identity")"
   [[ "$recipient" =~ ^age1[0-9a-z]{58}$ ]] || { fail "$agent: $(display_path "$identity") has no '# public key: age1…' line, which agent-env reads for the recipient → age-keygen writes one"; sound=0; }
   [ ! -e "$vault" ] || private_file "$agent" "$vault" || sound=0
+  if [ "$sound" -eq 1 ] && [ -e "$vault" ] && ! grep -qE "recipient: $recipient$" "$vault"; then
+    fail "$agent: $(display_path "$vault") is encrypted to a different recipient than the public-key line of $(display_path "$identity") → age-keygen -y $(display_path "$identity") prints the right one"; sound=0
+  fi
   [ "$sound" -eq 1 ] || return 0
   ok "$agent: credentials at $(display_path "$dir") (sops)"
   command -v secrets >/dev/null 2>&1 || { tools=0; warn "$agent: secrets is not on PATH, and agent-env points it at this vault → shiv install secrets"; }
@@ -125,7 +132,7 @@ while IFS= read -r agent; do
   secrets_dir="$(agent_secrets_dir "$HOUSE" "$agent" "$kind")"
   if [ -f "$secrets_dir/identity.txt" ]; then
     if [ "$kind" = housekeeper ]; then
-      fail "$agent: has a credential vault at $(display_path "$secrets_dir"); a housekeeper has no account, ever → move or delete it"
+      fail "$agent: has $(display_path "$secrets_dir")/identity.txt; a housekeeper has no account, ever → move or delete it"
     else
       credentials "$agent" "$secrets_dir"
     fi

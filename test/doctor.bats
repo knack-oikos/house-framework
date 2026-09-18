@@ -125,6 +125,11 @@ grant() {
   chmod 600 "$dir/identity.txt"
   printf '%s' "$dir"
 }
+
+vault() {
+  printf 'vulcan/github-pat: ENC[AES256_GCM,data:x,type:str]\nsops:\n    age:\n        - recipient: %s\n          enc: |\n            x\n' "${2:-$RECIPIENT}" > "$1/vault.enc.yaml"
+  chmod 600 "$1/vault.enc.yaml"
+}
 RECIPIENT="age1$(printf 'q%.0s' $(seq 58))"
 SECRET_KEY="AGE-SECRET-KEY-1$(printf 'Q%.0s' $(seq 58))"
 
@@ -132,7 +137,7 @@ SECRET_KEY="AGE-SECRET-KEY-1$(printf 'Q%.0s' $(seq 58))"
   grant hearth >/dev/null
   run house doctor --house "$H"
   assert_failure
-  assert_output_contains "fail: housekeeper: has a credential vault at $AGENTS_ROOT/hearth/.secrets; a housekeeper has no account, ever"
+  assert_output_contains "fail: housekeeper: has $AGENTS_ROOT/hearth/.secrets/identity.txt; a housekeeper has no account, ever"
   assert_output_contains "doctor: 1 failing"
 }
 
@@ -151,11 +156,17 @@ SECRET_KEY="AGE-SECRET-KEY-1$(printf 'Q%.0s' $(seq 58))"
   assert_output_contains "ok:   vulcan: credentials at $dir (sops)"
   assert_output_contains "warn: vulcan: secrets is not on PATH, and agent-env points it at this vault → shiv install secrets"
   assert_output_contains "note: vulcan: no vault yet at $dir/vault.enc.yaml; the first secrets set creates it"
-  touch "$dir/vault.enc.yaml"
-  chmod 600 "$dir/vault.enc.yaml"
+  vault "$dir"
   run env PATH="$farm" bash -c 'house "$@"' _ doctor --house "$H"
   assert_success
   assert_output_contains "note: vulcan: round trip skipped; secrets list needs both tools on PATH"
+  vault "$dir" "age1$(printf 'z%.0s' $(seq 58))"
+  run env PATH="$farm" bash -c 'house "$@"' _ doctor --house "$H"
+  assert_failure
+  assert_output_contains "fail: vulcan: $dir/vault.enc.yaml is encrypted to a different recipient than the public-key line of $dir/identity.txt → age-keygen -y $dir/identity.txt prints the right one"
+  ! [[ "$output" == *"credentials at"* ]]
+  assert_output_contains "doctor: 1 failing"
+  vault "$dir"
   chmod 770 "$dir"
   printf '%s\n' "$SECRET_KEY" > "$dir/identity.txt"
   run env PATH="$farm" bash -c 'house "$@"' _ doctor --house "$H"
@@ -168,8 +179,7 @@ SECRET_KEY="AGE-SECRET-KEY-1$(printf 'Q%.0s' $(seq 58))"
 @test "doctor proves the identity opens the vault through secrets list, under the exports agent-env would print" {
   house agent add vulcan --house "$H" --role backend --owns server/ >/dev/null
   dir="$(grant vulcan)"
-  touch "$dir/vault.enc.yaml"
-  chmod 600 "$dir/vault.enc.yaml"
+  vault "$dir"
   bin="$BATS_TEST_TMPDIR/bin"
   mkdir -p "$bin"
   printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$SECRETS_PROVIDER $SECRETS_SOPS_FILE $SECRETS_SOPS_AGE_KEY_FILE $SECRETS_SOPS_RECIPIENT $*" >> "$SECRETS_LOG"\nexit "${SECRETS_EXIT:-0}"\n' > "$bin/secrets"
@@ -185,4 +195,22 @@ SECRET_KEY="AGE-SECRET-KEY-1$(printf 'Q%.0s' $(seq 58))"
   assert_failure
   assert_output_contains "fail: vulcan: secrets cannot open the vault with this identity → eval \"\$(mise run -q agent-env vulcan)\" in the house, then secrets list --prefix vulcan/ says why"
   assert_output_contains "doctor: 1 failing"
+}
+
+@test "doctor judges a symlinked .secrets by the directory it points at, so the fix it names applies" {
+  house agent add vulcan --house "$H" --role backend --owns server/ >/dev/null
+  dir="$(grant vulcan)"
+  farm="$(path_without secrets)"
+  mv "$dir" "$BATS_TEST_TMPDIR/elsewhere"
+  ln -s "$BATS_TEST_TMPDIR/elsewhere" "$dir"
+  run env PATH="$farm" bash -c 'house "$@"' _ doctor --house "$H"
+  assert_success
+  assert_output_contains "ok:   vulcan: credentials at $dir (sops)"
+  chmod 770 "$BATS_TEST_TMPDIR/elsewhere"
+  run env PATH="$farm" bash -c 'house "$@"' _ doctor --house "$H"
+  assert_failure
+  assert_output_contains "fail: vulcan: $dir is writable by others (mode 770) → chmod 700 $dir"
+  chmod 700 "$dir"
+  run env PATH="$farm" bash -c 'house "$@"' _ doctor --house "$H"
+  assert_success
 }
