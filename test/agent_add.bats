@@ -48,7 +48,7 @@ setup() {
   assert_file_contains "$AGENTS_ROOT/vulcan/home/AGENTS.md" "$AGENTS_ROOT/vulcan/home"
   [ -z "$(ls -A "$DEFINITIONS_DIR")" ]
   ! grep -rq '{{' "$H/notes/vulcan.md" "$AGENTS_ROOT/vulcan/home"
-  ! grep -rqi 'claude' "$H" "$AGENTS_ROOT/vulcan/home"
+  ! grep -rqiwE "$(awk '$1 == "runner" { print $2 }' "$REPO_DIR/lib/lineage-names" | paste -sd '|')" "$H" "$AGENTS_ROOT/vulcan/home"
   ! grep -rq 'house:decide' "$H/notes/vulcan.md" "$AGENTS_ROOT/vulcan/home"
 }
 
