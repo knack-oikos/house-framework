@@ -121,6 +121,7 @@ VARS=(
   "PROJECT=$PROJECT"
   "PLACEMENT=$PLACEMENT"
   "CREATED=$(today)"
+  "FRAMEWORK_VERSION=$(framework_version)"
 )
 
 NEW_REPO=false

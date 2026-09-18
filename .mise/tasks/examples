@@ -26,6 +26,7 @@ example() {
     MISE_AUTO_INSTALL=0 \
     HOUSE_AGENTS_ROOT="$home/agents" \
     HOUSE_TODAY=2026-01-01 \
+    HOUSE_FRAMEWORK_VERSION=v0.0.0 \
     GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
     GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.name GIT_CONFIG_VALUE_0= \
     mise run -q "$task" "$@" >/dev/null

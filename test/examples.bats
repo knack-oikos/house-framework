@@ -35,6 +35,7 @@ load test_helper
   assert_file_contains "$e/example/AGENTS.md" '`~/example` is a single shared checkout'
   assert_file_contains "$e/example/AGENTS.md" "house:decide: who the owner is"
   assert_file_contains "$e/example/notes/housekeeper.md" "created: 2026-01-01"
+  assert_file_contains "$e/example/README.md" "on 2026-01-01, at v0.0.0."
   assert_file_contains "$e/agents/example/home/AGENTS.md" "~/agents/example/home"
   ! grep -rq '{{[A-Z_]*}}' "$e"
   ! grep -rqi 'claude' "$e" "$REPO_DIR/.mise/tasks/examples"

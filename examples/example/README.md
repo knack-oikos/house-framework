@@ -5,7 +5,7 @@ part work queue: the agents read their rules here, record what they learn
 here, and take work from here.
 
 Started from [house-framework](https://github.com/olavostauros/house-framework)
-on 2026-01-01.
+on 2026-01-01, at v0.0.0.
 
 ## Who lives here
 

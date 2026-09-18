@@ -39,6 +39,7 @@ setup() {
   [ "$status" -eq 1 ]
   [ "$(grep -rh 'house-framework' --exclude-dir=.git "$h" "$AGENTS_ROOT" | wc -l)" -eq 1 ]
   assert_file_contains "$h/README.md" "Started from [house-framework](https://github.com/olavostauros/house-framework)"
+  assert_file_contains "$h/README.md" "on $(date +%Y-%m-%d), at $(house version)."
   [ "$(git -C "$h" log -1 --format=%s)" = "hearth: bootstrap the household from house-framework" ]
 }
 
