@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-#MISE description="Print the agents shimmer may act as: the roster minus the housekeeper, which has no GitHub identity"
-set -eo pipefail
-
-awk -F '\t' '!/^#/ && NF && $1 != "{{HOUSEKEEPER}}" { print $1 }' "$HOUSE_DIR/roster.tsv"

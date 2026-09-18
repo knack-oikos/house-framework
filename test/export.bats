@@ -1,15 +1,7 @@
 load test_helper
 
 setup() {
-  export CALLER="$BATS_TEST_TMPDIR/caller"
-  export AGENTS_ROOT="$BATS_TEST_TMPDIR/agents"
-  export DEFINITIONS_DIR="$BATS_TEST_TMPDIR/definitions"
-  export MISE_TRUSTED_CONFIG_PATHS="$BATS_TEST_TMPDIR"
-  export GIT_AUTHOR_NAME="house test"
-  export GIT_AUTHOR_EMAIL="house-test@example.invalid"
-  export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
-  export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
-  mkdir -p "$CALLER" "$AGENTS_ROOT" "$DEFINITIONS_DIR"
+  house_setup
   H="$BATS_TEST_TMPDIR/hearth"
   house init hearth --at "$H" --project "the forge" >/dev/null
   house agent add vulcan --house "$H" --role backend --owns server/ >/dev/null
@@ -76,8 +68,7 @@ setup() {
 }
 
 @test "export says so on an empty roster" {
-  rm -rf "$H" "$AGENTS_ROOT/hearth"
-  house init hearth --at "$H" --no-housekeeper >/dev/null
+  printf '# name\trole\towns\tkind\n' > "$H/roster.tsv"
   run house export claude-code --house "$H"
   assert_success
   assert_output_contains "nothing to export"

@@ -41,7 +41,4 @@ jobs:
           house version
           [ "$(house --version | awk '{ sub(/\*$/, "", $2); print $2 }')" = "$(house version)" ]
           house init t --at /tmp/t --owner x
-          grep -rl 'house:decide' --exclude-dir=.git /tmp/t | while IFS= read -r f; do
-            awk '/<!-- house:decide/ { skip = 1 } !skip { print } skip && /-->/ { skip = 0 }' "$f" > "$f.decided" && mv "$f.decided" "$f"
-          done
           house doctor --house /tmp/t

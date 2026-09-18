@@ -11,8 +11,7 @@ setup() {
   export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
   mkdir -p "$CALLER" "$AGENTS_ROOT" "$DEFINITIONS_DIR"
   H="$BATS_TEST_TMPDIR/hearth"
-  house init hearth --at "$H" >/dev/null
-  make_theirs "$H"
+  house init hearth --at "$H" --owner "$GIT_AUTHOR_NAME" >/dev/null
   in_house "$H" install-hooks >/dev/null
   BIN="$BATS_TEST_TMPDIR/bin"
   mkdir -p "$BIN"
@@ -98,70 +97,4 @@ path_without() {
   doctor_with
   assert_success
   assert_output_contains "note: framework: the README records no framework version (this tool is $(house version))"
-}
-
-@test "doctor checks that a pinned package is named by a source file or an index on this machine" {
-  n="$BATS_TEST_TMPDIR/hall"
-  house init hall --at "$n" --with notes >/dev/null
-  make_theirs "$n"
-  printf 'notes/** filter=git-crypt diff=git-crypt\n' > "$n/.gitattributes"
-  mkdir -p "$n/.git-crypt/keys/default/0"
-  H="$n"
-  src="$BATS_TEST_TMPDIR/sources"
-  data="$BATS_TEST_TMPDIR/mise-data"
-  mkdir -p "$src"
-  doctor_with SHIV_SOURCES_DIR="$src" MISE_DATA_DIR="$data" SHIV_INSTALL_PATH="$BATS_TEST_TMPDIR/no-cli"
-  assert_success
-  assert_output_contains "warn: shiv:notes: not named by any source file under $src, and no shiv index is on this machine yet"
-  assert_output_contains "needs $src/notes.json"
-  mkdir -p "$data/shiv-backend/shiv"
-  printf '{\n  "other": "example/other"\n}\n' > "$data/shiv-backend/shiv/sources.json"
-  doctor_with SHIV_SOURCES_DIR="$src" MISE_DATA_DIR="$data" SHIV_INSTALL_PATH="$BATS_TEST_TMPDIR/no-cli"
-  assert_failure
-  assert_output_contains "fail: shiv:notes: not named by any source file under $src or by $data/shiv-backend/shiv/sources.json → $src/notes.json"
-  assert_output_contains "doctor: 1 failing"
-  printf '{"notes": "example/notes"}\n' > "$src/mine.json"
-  doctor_with SHIV_SOURCES_DIR="$src" MISE_DATA_DIR="$data" SHIV_INSTALL_PATH="$BATS_TEST_TMPDIR/no-cli"
-  assert_success
-  assert_output_contains "ok:   shiv:notes: named by $src/mine.json"
-  rm "$src/mine.json"
-  printf '{\n  "notes": "example/notes"\n}\n' > "$data/shiv-backend/shiv/sources.json"
-  doctor_with SHIV_SOURCES_DIR="$src" MISE_DATA_DIR="$data" SHIV_INSTALL_PATH="$BATS_TEST_TMPDIR/no-cli"
-  assert_success
-  assert_output_contains "ok:   shiv:notes: named by $data/shiv-backend/shiv/sources.json"
-  [ ! -e "$data/installs" ]
-}
-
-@test "doctor warns about a floating shiv range in the global mise config, and only when the house has pins" {
-  n="$BATS_TEST_TMPDIR/hall"
-  house init hall --at "$n" --with notes >/dev/null
-  make_theirs "$n"
-  printf 'notes/** filter=git-crypt diff=git-crypt\n' > "$n/.gitattributes"
-  mkdir -p "$n/.git-crypt/keys/default/0"
-  src="$BATS_TEST_TMPDIR/sources"
-  mkdir -p "$src"
-  printf '{"notes": "example/notes"}\n' > "$src/mine.json"
-  global="$BATS_TEST_TMPDIR/global.toml"
-  printf '[tools]\n"shiv:notes" = "latest"\n"shiv:shimmer" = "0.5.0"\n' > "$global"
-  doctor_with
-  H="$n"
-  doctor_with SHIV_SOURCES_DIR="$src" MISE_GLOBAL_CONFIG_FILE="$global"
-  assert_success
-  assert_output_contains "warn: $global: shiv:notes latest is a range; a floating range in the global mise config deadlocks the nested install on release day (https://github.com/KnickKnackLabs/vfox-shiv/issues/36) → pin the exact version there"
-  ! [[ "$output" == *"shiv:shimmer 0.5.0 is a range"* ]]
-  ! [[ "$output" == *"every shiv: pin is exact"* ]]
-  printf '[tools]\n"shiv:notes" = "0.5.0"\n' > "$global"
-  doctor_with SHIV_SOURCES_DIR="$src" MISE_GLOBAL_CONFIG_FILE="$global"
-  assert_success
-  ! [[ "$output" == *"is a range"* ]]
-  assert_output_contains "ok:   $global: every shiv: pin is exact"
-  printf '[tools]\njq = "latest"\n' > "$global"
-  doctor_with SHIV_SOURCES_DIR="$src" MISE_GLOBAL_CONFIG_FILE="$global"
-  assert_success
-  ! [[ "$output" == *"$global"* ]]
-  H="$BATS_TEST_TMPDIR/hearth"
-  printf '[tools]\n"shiv:notes" = "latest"\n' > "$global"
-  doctor_with MISE_GLOBAL_CONFIG_FILE="$global"
-  assert_success
-  ! [[ "$output" == *"is a range"* ]]
 }

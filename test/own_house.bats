@@ -4,16 +4,11 @@ listed_names() {
   awk -v kind="${1:-}" 'kind == "" || $1 == kind { print $2 }' "$REPO_DIR/lib/lineage-names" | paste -sd '|'
 }
 
+HOUSE_KEYS="HOUSE_NAME HOUSE_UPPER HOUSE_PATH WORK_PATH WORK_DIR_EXPR PROJECT CREATED FRAMEWORK_VERSION OWNER AUTHOR_DOMAIN PLACEMENT"
+AGENT_KEYS="AGENT ROLE OWNS CHARGE WORKSPACE_PATH HOME_PATH"
+
 setup() {
-  export CALLER="$BATS_TEST_TMPDIR/caller"
-  export AGENTS_ROOT="$BATS_TEST_TMPDIR/agents"
-  export DEFINITIONS_DIR="$BATS_TEST_TMPDIR/definitions"
-  export MISE_TRUSTED_CONFIG_PATHS="$BATS_TEST_TMPDIR"
-  export GIT_AUTHOR_NAME="house test"
-  export GIT_AUTHOR_EMAIL="house-test@example.invalid"
-  export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
-  export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
-  mkdir -p "$CALLER" "$AGENTS_ROOT" "$DEFINITIONS_DIR"
+  house_setup
   LINEAGE="$(listed_names)|KnickKnackLabs|Knick Knack Labs|Bash tool|\[\[ABORT\]\]"
 }
 
@@ -28,6 +23,33 @@ setup() {
   [ ! -e "$REPO_DIR/LINEAGE.md" ]
   run find "$REPO_DIR" -path "$REPO_DIR/.git" -prune -o -iname 'lineage*' -print
   [ "$output" = "$REPO_DIR/lib/lineage-names" ]
+}
+
+@test "the framework has a scaffold, not templates: no menu, no .tmpl, and nothing that asks the owner" {
+  [ ! -e "$REPO_DIR/templates" ]
+  [ ! -e "$REPO_DIR/examples" ]
+  [ -d "$REPO_DIR/scaffold/house" ]
+  [ -d "$REPO_DIR/scaffold/agent" ]
+  run find "$REPO_DIR/scaffold" -name '*.tmpl'
+  [ -z "$output" ]
+  run grep -rl 'house:decide' "$REPO_DIR/scaffold" "$REPO_DIR/lib" "$REPO_DIR/.mise"
+  [ -z "$output" ]
+  run grep -rlE 'usage_(style|with|no_housekeeper|kind|no_home)\b' "$REPO_DIR/lib" "$REPO_DIR/.mise"
+  [ -z "$output" ]
+}
+
+@test "every key in the scaffold names a fact, and AGENTS.md enumerates each one" {
+  run bash -c "grep -rohE '\{\{[A-Z_]+\}\}' '$REPO_DIR/scaffold' | sort -u | tr -d '{}'"
+  [ -n "$output" ]
+  for key in $output; do
+    case " $HOUSE_KEYS $AGENT_KEYS " in
+      *" $key "*) ;;
+      *) printf 'not a fact key: {{%s}}\n' "$key" >&2; return 1 ;;
+    esac
+  done
+  for key in $HOUSE_KEYS $AGENT_KEYS; do
+    grep -qF "\`{{$key}}\`" "$REPO_DIR/AGENTS.md"
+  done
 }
 
 @test "a fresh house names no lineage, no runner and no mail domain, and keeps one line of attribution" {
@@ -50,7 +72,7 @@ setup() {
   [ "$(git -C "$h" log -1 --format=%s)" = "hearth: bootstrap the household from house-framework" ]
 }
 
-@test "the fresh contract holds the authority sections and three guard rules, and asks the owner for a style" {
+@test "the fresh contract holds the authority sections and three guard rules, asserts the merge rule, and wires the house style" {
   h="$BATS_TEST_TMPDIR/hearth"
   house init hearth --at "$h"
   run sed -nE 's/^\*\*([^*]+)(\*\*.*)?$/\1/p' "$h/AGENTS.md"
@@ -68,59 +90,50 @@ Notes are plaintext here."
     grep -qxF -- "$line" "$h/AGENTS.md"
   done
   assert_file_contains "$h/AGENTS.md" "None granted yet."
-  assert_file_contains "$h/AGENTS.md" "house:decide: house style."
+  assert_file_contains "$h/AGENTS.md" "with a merge commit, never a squash or a rebase"
+  assert_file_contains "$h/AGENTS.md" "[[house-style]], wired to Read-first"
+  assert_file_contains "$h/AGENTS.md" '| commit, review, open a PR, or end a session | [`notes/house-style.md`](notes/house-style.md) |'
   ! grep -q "Merge, don't squash" "$h/AGENTS.md"
   ! grep -q "Push back when something smells off" "$h/AGENTS.md"
-  [ ! -e "$h/notes/house-style.md" ]
-}
-
-@test "init --style strict renders the style as a note wired to Read-first and names it in the bootstrap commit" {
-  h="$BATS_TEST_TMPDIR/hearth"
-  run house init hearth --at "$h" --style strict
-  assert_success
-  assert_output_contains "create: notes/house-style.md (style: strict)"
   assert_file_contains "$h/notes/house-style.md" "title: house-style"
   assert_file_contains "$h/notes/house-style.md" "**Merge, don't squash.**"
   assert_file_contains "$h/notes/house-style.md" "**Push back when something smells off.**"
+  assert_file_says "$h/notes/house-style.md" "The framework wrote it and the owner changes it, in the owner's own turn"
   ! grep -qiwE "$LINEAGE" "$h/notes/house-style.md"
-  ! grep -q 'house:decide' "$h/notes/house-style.md"
-  assert_file_contains "$h/AGENTS.md" "House style is [[house-style]]"
-  assert_file_contains "$h/AGENTS.md" '| commit, review, open a PR, or end a session | [`notes/house-style.md`](notes/house-style.md) |'
-  ! grep -q 'house:decide: house style' "$h/AGENTS.md"
-  ! grep -q "Merge, don't squash" "$h/AGENTS.md"
-  [ "$(git -C "$h" log -1 --format=%s)" = "hearth: bootstrap the household from house-framework, with the strict style" ]
-  run house init hall --at "$BATS_TEST_TMPDIR/hall" --style loose
-  assert_failure
-  assert_output_contains "unknown style: loose (known: strict"
-  [ ! -e "$BATS_TEST_TMPDIR/hall/AGENTS.md" ]
+  ! grep -q '{{' "$h/notes/house-style.md"
 }
 
-@test "init renders --owner into the contract, and asks when nobody is named" {
+@test "init renders --owner into the contract, falls back to git user.name, and fails when nobody is named" {
   h="$BATS_TEST_TMPDIR/hearth"
   house init hearth --at "$h" --owner "Ada"
-  assert_file_contains "$h/AGENTS.md" "The owner is **Ada**: the one human here, who files the queue, merges, and alone widens a rule."
-  ! grep -q 'house:decide: who the owner is' "$h/AGENTS.md"
+  assert_file_contains "$h/AGENTS.md" "The owner is **Ada**: the one human here, who files the queue, merges,"
   house init hall --at "$BATS_TEST_TMPDIR/hall"
-  assert_file_contains "$BATS_TEST_TMPDIR/hall/AGENTS.md" "house:decide: who the owner is"
-  ! grep -q 'The owner is \*\*' "$BATS_TEST_TMPDIR/hall/AGENTS.md"
+  assert_file_contains "$BATS_TEST_TMPDIR/hall/AGENTS.md" "The owner is **house test**: the one human here"
+  run env GIT_CONFIG_COUNT=0 bash -c 'house "$@"' _ init keep --at "$BATS_TEST_TMPDIR/keep"
+  assert_failure
+  assert_output_contains "the owner has no name: pass --owner '<name>', or set git config user.name"
+  [ ! -e "$BATS_TEST_TMPDIR/keep/AGENTS.md" ]
+  [ ! -e "$AGENTS_ROOT/keep" ]
 }
 
-@test "a fresh house asks the owner to decide wherever the framework used to answer, and nowhere else" {
+@test "a fresh house, with a builder and a judge, asks the owner nothing, carries no key, and is healthy" {
   h="$BATS_TEST_TMPDIR/hearth"
   house init hearth --at "$h"
   house agent add vulcan --house "$h" --role backend --owns server/ >/dev/null
   house agent add argus --house "$h" --role review >/dev/null
-  run grep -rc 'house:decide' --exclude-dir=.git "$h" "$AGENTS_ROOT"
-  expected="$h/AGENTS.md:5
-$h/README.md:1
-$h/notes/household-backlog.md:1
-$h/notes/vulcan.md:1
-$h/notes/argus.md:1"
-  [ "$(printf '%s\n' "$output" | grep -v ':0$' | sort)" = "$(printf '%s\n' "$expected" | sort)" ]
-  ! grep -q 'house:decide' "$h/notes/housekeeper.md"
-  ! grep -rq 'house:decide' "$AGENTS_ROOT"
-  make_theirs "$h"
-  ! grep -rq 'house:decide' "$h"
+  run grep -rl 'house:decide' --exclude-dir=.git "$h" "$AGENTS_ROOT"
+  [ -z "$output" ]
+  run grep -rlE '\{\{[A-Z_]+\}\}' --exclude-dir=.git "$h" "$AGENTS_ROOT"
+  [ -z "$output" ]
+  run grep -rl 'The owner writes this section' --exclude-dir=.git "$h" "$AGENTS_ROOT"
+  [ -z "$output" ]
+  for agent in housekeeper vulcan argus; do
+    assert_file_contains "$h/notes/$agent.md" "## Stance"
+    assert_file_says "$h/notes/$agent.md" "Narrowing this stance is $agent's; widening it is the owner's."
+  done
+  run house doctor --house "$h"
+  assert_success
+  assert_output_contains "doctor: healthy"
   run in_house "$h" test
   assert_success
 }

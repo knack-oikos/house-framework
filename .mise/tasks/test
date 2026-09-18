@@ -7,11 +7,8 @@ set -euo pipefail
 printf '\n== bats ==\n'
 bats --print-output-on-failure test
 
-printf '\n== templates ==\n'
-while IFS= read -r f; do
+printf '\n== scaffold ==\n'
+for f in scaffold/house/hooks/* scaffold/house/.mise/tasks/*; do
   bash -n "$f"
-done < <(find templates -type f \( -path '*/.mise/tasks/*.tmpl' -o -path '*/hooks/*.tmpl' -o -name '*.sh' \) | sort)
+done
 echo ok
-
-printf '\n== examples ==\n'
-mise run -q examples
