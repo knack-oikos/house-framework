@@ -20,7 +20,7 @@ commit_copy() {
   git -C "$COPY" -c commit.gpgsign=false commit -q --allow-empty -m "$1"
 }
 
-@test "version prints the tag at HEAD, the nearest tag past it, and unknown outside a git worktree" {
+@test "version prints the tag at HEAD, else the short commit, and unknown outside a git worktree" {
   run version_of_copy
   assert_success
   [ "$output" = "unknown" ]
@@ -33,7 +33,8 @@ commit_copy() {
   commit_copy "second"
   run version_of_copy
   assert_success
-  [[ "$output" =~ ^v9\.9\.9-1-g[0-9a-f]{7,}$ ]]
+  [ "$output" = "$(git -C "$COPY" rev-parse --short HEAD)" ]
+  [[ "$output" =~ ^[0-9a-f]{7,}$ ]]
   run env HOUSE_FRAMEWORK_VERSION=v1.2.3 MISE_AUTO_INSTALL=0 mise -C "$COPY" run -q version
   [ "$output" = "v1.2.3" ]
 }

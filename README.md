@@ -83,8 +83,10 @@ as `house` for its owner.
 Bare `shiv install house` takes the newest release tag; `shiv install
 house@main` tracks `main`, `shiv install house@v0.1.0` pins, and `shiv
 update house` moves an install to the newest release. `house --version` is
-what a bug report quotes, and `house version` is the same fact from the
-inside.
+what a bug report quotes: the tag at the install's `HEAD`, else its short
+commit, then the branch and the age of the last commit. `house version` is
+the same tag or short commit from the inside, and it is what a house
+records when it is made.
 
 Three things to know about the chain before running it. The installer
 `eval`s a terminal-UI library fetched over the network at run time, and

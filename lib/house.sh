@@ -196,7 +196,7 @@ framework_version() {
   fi
   if [ "$(git -C "$HOUSE_REPO_DIR" rev-parse --show-toplevel 2>/dev/null)" = "$(cd "$HOUSE_REPO_DIR" && pwd -P)" ]; then
     git -C "$HOUSE_REPO_DIR" describe --tags --exact-match HEAD 2>/dev/null \
-      || git -C "$HOUSE_REPO_DIR" describe --tags --always HEAD 2>/dev/null \
+      || git -C "$HOUSE_REPO_DIR" rev-parse --short HEAD 2>/dev/null \
       && return
   fi
   printf 'unknown\n'
