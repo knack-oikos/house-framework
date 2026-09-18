@@ -7,6 +7,16 @@ updated: 2026-09-17
 
 # Lineage
 
+This note is house-framework's design history, written for a reader who has
+never seen any of the three households its templates were distilled from;
+nothing in it is needed to use the framework, and the households are named
+here and in `lib/lineage-names`, the list the tests read to keep them out of
+everything else. *The maintainer* below is the person who maintains this
+repository, who owned two of the three households (oikos and agora) and
+forked oikos from the third, fold — another family's house, whose practice
+was borrowed; *the owner* is the role a house's contract gives to whoever
+owns that house.
+
 What house-framework kept from each of its three sources, what it dropped,
 and why. Read this before changing a template, so a rule is not removed
 because its reason was forgotten, and not kept because nobody remembered
@@ -14,29 +24,33 @@ that it was an accident.
 
 ## fold → oikos → agora → house-framework
 
-**fold** (ricon-family, 2026) is the original: a shared home base where
-twenty-odd agents wake, with the whole Knick Knack Labs toolchain declared
-in `mise.toml` — `shiv` for packages, `shimmer` for identity and CI wakes,
-`notes` for encrypted shared memory, `chat`, `emails`, `sessions`, `desks`,
-`modules`. Its `AGENTS.md` is long and mixes rule with practice, and it
-points at some forty notes through a trigger table.
+**fold** ([`ricon-family/fold`](https://github.com/ricon-family/fold),
+2026) is the original: a shared home base where twenty-odd agents wake, with
+the whole [Knick Knack Labs](https://github.com/KnickKnackLabs) (KKL)
+toolchain declared in `mise.toml` — `shiv` for packages, `shimmer` for
+identity and CI wakes, `notes` for encrypted shared memory, `chat`,
+`emails`, `sessions`, `desks`, `modules`. Its `AGENTS.md` is long and mixes
+rule with practice, and it points at some forty notes through a trigger
+table.
 
-**oikos** (olavostauros, 2026-08) forked fold for one household of two,
-`knick` and `knack`, and grew the part fold did not have: an explicit
-authority model. The tiers (free / propose / never), the two-key rule, the
-loosenings table with its append-only and enumerated-once rules, the
-owner-only list, and the refusal of relayed approval all come from oikos,
-each one written after a real failure the note records. oikos also learned,
-expensively, that a contract loaded whole by every agent every session
-costs more than the work, and decided on 2026-09-03 that the contract holds
-authority only and practice moves to trigger-read notes.
+**oikos** ([`olavostauros/oikos`](https://github.com/olavostauros/oikos),
+2026-08) forked fold for one household of two, `knick` and `knack`, and grew
+the part fold did not have: an explicit authority model. The tiers (free /
+propose / never), the two-key rule, the loosenings table with its
+append-only and enumerated-once rules, the owner-only list, and the refusal
+of relayed approval all come from oikos, each one written after a real
+failure the note records. oikos also learned, expensively, that a contract
+loaded whole by every agent every session costs more than the work, and
+decided on 2026-09-03 that the contract holds authority only and practice
+moves to trigger-read notes.
 
-**agora** (2026-09-16, inside `olavostauros/ticket`) is oikos rebuilt for a
-project rather than for upstream contribution: four agents each owning a
-directory, a reviewer with no directory, the owner filing the queue, no KKL
-tooling beyond `bats`, plaintext notes, the owner's `gh` login as transport,
-and four domain rule sets — money, identity, data, review — that bind one
-agent each. It is the smallest thing that is still a household.
+**agora** (2026-09-16, inside `olavostauros/ticket`, a private repository
+with no public link) is oikos rebuilt for a project rather than for upstream
+contribution: four agents each owning a directory, a reviewer with no
+directory, the owner filing the queue, no KKL tooling beyond `bats`,
+plaintext notes, the owner's GitHub CLI (`gh`) login as transport, and four
+domain rule sets — money, identity, data, review — that bind one agent each.
+It is the smallest thing that is still a household.
 
 **house-framework** takes agora's size as the default and oikos's authority
 model as the invariant, and makes both generate.
@@ -98,7 +112,7 @@ model as the invariant, and makes both generate.
   duty on its own, as an agent that carries no GitHub identity and no mail
   by design, so that the one agent whose job is trust in the record is
   never itself a voice the record has to account for. It is on every roster
-  from `init` unless `--no-housekeeper`. On 2026-09-16 the owner fixed two
+  from `init` unless `--no-housekeeper`. On 2026-09-16 the maintainer fixed two
   more things about it: there is exactly one per house and its name is
   always `housekeeper`, and it is the house speaking rather than a resident
   of it — so its home is `~/agents/<house>/home` and an exported definition
@@ -107,7 +121,7 @@ model as the invariant, and makes both generate.
   home by house removed the reason for it.
 - **Harness independence.** fold, oikos and agora all wrote Claude Code
   definitions into `~/.claude/agents/` as part of adding an agent, and the
-  first house-framework did too. The owner's rule on 2026-09-16 is that a
+  first house-framework did too. The maintainer's rule on 2026-09-16 is that a
   house does not depend on a runner: the roster carries the agent's kind,
   the home `AGENTS.md` is its brief, and a runner's file is a projection of
   those made by `house export <harness>`, kept under `templates/harness/`.
@@ -120,15 +134,17 @@ model as the invariant, and makes both generate.
   false. The default is unchanged: no `--with`, one aqua tool. What the
   build changed from the item as filed: `agent-env` is **not** swapped for
   `shimmer as`, because `shimmer as` reads its token through `secrets` and
-  the desktop keyring, and the owner ruled on 2026-09-17 (after oikos lost
+  the desktop keyring, and the maintainer ruled on 2026-09-17 (after oikos lost
   every agent credential to a shadowed keyring) that a house depends on
   neither; the shimmer preset wires `agent:list` instead, so shimmer reads
   the roster minus the housekeeper. `secrets` has no preset and will not
   get one. `notes` cannot be switched on by `init` — encryption needs the
   owner's key — so the preset declares, rewrites, and leaves `notes setup
   --gpg-key` as the owner's step, with `house doctor` failing until it has
-  run. `chat`, `emails` (each needs the loosening row) and `tits` (which
-  of `agent add` and `tits` owns `~/agents/<name>/home`) are still open.
+  run. `chat`, `emails` (each needs the loosening row) and `tits`
+  ([`KnickKnackLabs/tits`](https://github.com/KnickKnackLabs/tits), an
+  agent-home bootstrap tool; which of `agent add` and `tits` owns
+  `~/agents/<name>/home`) are still open.
 
 ## Open
 

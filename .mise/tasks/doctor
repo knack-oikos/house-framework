@@ -72,7 +72,7 @@ if [ -n "$pins" ]; then
     fail "mise.toml pins a shiv package without [plugins] shiv = \"https://github.com/KnickKnackLabs/vfox-shiv\""
   fi
   while IFS=$'\t' read -r pkg version; do
-    if exact_version "$version"; then ok "shiv:$pkg $version: exact pin"; else fail "shiv:$pkg $version: a range, not a release; pin the exact version (vfox-shiv#36 deadlocks on a floating range)"; fi
+    if exact_version "$version"; then ok "shiv:$pkg $version: exact pin"; else fail "shiv:$pkg $version: a range, not a release; pin the exact version (a floating range deadlocks vfox-shiv: https://github.com/KnickKnackLabs/vfox-shiv/issues/36)"; fi
     if package_installed "$HOUSE" "$pkg" "$version"; then ok "shiv:$pkg $version: installed"; else warn "shiv:$pkg $version: not installed → mise -C $(display_path "$HOUSE") install"; fi
     case "$pkg" in
       notes)
