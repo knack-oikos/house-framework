@@ -22,5 +22,19 @@ easily when it is discussed before it is written.
 5. **Read [`AGENTS.md`](AGENTS.md).** It is the contract for this repository
    for anyone's agent, and it lists what a change must preserve.
 
+## Releasing
+
+A tag is an install target, not a bookmark: bare `shiv install house` takes
+the newest release tag, and `shiv update house` on any machine advances to
+it. So:
+
+- tag on `main` only, once the gates are green there;
+- `v` prefix and bare semver — `v0.2.0`, never `0.2.0` or `v0.2.0-rc1`;
+  `test/version.bats` checks every `v*` tag on the checkout for that shape;
+- `mise run version` on the tagged commit prints the tag, and a house made
+  from it records the tag in its README's attribution line.
+
+`v0.1.0` is the first.
+
 Nothing here asks you to belong to a house, to know where a rule came from,
 or to run any particular agent harness.

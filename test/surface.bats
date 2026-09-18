@@ -1,0 +1,19 @@
+load test_helper
+
+@test "the shim's surface is init, doctor, version, agent add, rules add and export; examples and test are hidden" {
+  run bash -c "cd '$REPO_DIR' && mise tasks ls --json --hidden | jq -r 'sort_by(.name)[] | \"\\(.name) \\(.hide)\"'"
+  assert_success
+  [ "$output" = "agent:add false
+doctor false
+examples true
+export:claude-code false
+init false
+rules:add false
+test true
+version false" ]
+  run bash -c "cd '$REPO_DIR' && mise tasks ls --json | jq -r '.[].name'"
+  ! [[ "$output" == *"examples"* ]]
+  ! [[ "$output" == *"test"* ]]
+  run house examples
+  assert_success
+}
