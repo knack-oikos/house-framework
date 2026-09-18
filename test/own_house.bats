@@ -17,10 +17,17 @@ setup() {
   LINEAGE="$(listed_names)|KnickKnackLabs|Knick Knack Labs|Bash tool|\[\[ABORT\]\]"
 }
 
-@test "the framework ships no household or personal name outside notes/lineage.md and lib/lineage-names" {
-  run bash -c "grep -rniwE '$(listed_names)' --exclude-dir=.git --exclude=lineage.md --exclude=lineage-names '$REPO_DIR' | grep -v 'olavostauros/house-framework'"
+@test "the framework ships no household or personal name outside lib/lineage-names" {
+  run bash -c "grep -rniwE '$(listed_names)' --exclude-dir=.git --exclude=lineage-names '$REPO_DIR' | grep -v 'olavostauros/house-framework'"
   [ -z "$output" ]
   [ "$(awk '$1 == "house"' "$REPO_DIR/lib/lineage-names" | wc -l)" -ge 1 ]
+}
+
+@test "the framework is a bootstrap, not a house: no notes/, no lineage file" {
+  [ ! -e "$REPO_DIR/notes" ]
+  [ ! -e "$REPO_DIR/LINEAGE.md" ]
+  run find "$REPO_DIR" -path "$REPO_DIR/.git" -prune -o -iname 'lineage*' -print
+  [ "$output" = "$REPO_DIR/lib/lineage-names" ]
 }
 
 @test "a fresh house names no lineage, no runner and no mail domain, and keeps one line of attribution" {

@@ -1,12 +1,14 @@
 # house-framework
 
-A tool repo, not a household. There is no roster here and no queue. This
-file is the contract for this repository, for whoever's agent works on it —
-yours, under any harness or none, with no house behind it. It says what the
-repo must preserve and what a change needs;
-[`CONTRIBUTING.md`](CONTRIBUTING.md) has the mechanics. An agent that does
-belong to a house is still governed by that house's contract; this one
-governs the repo.
+A tool repo, not a household. There is no roster here, no queue and no
+`notes/`; a house's notes come only from `templates/`, and the households
+this shape was distilled from are named in `lib/lineage-names` and in git
+history, nowhere else. This file is the contract for this repository, for
+whoever's agent works on it — yours, under any harness or none, with no
+house behind it. It says what the repo must preserve and what a change
+needs; [`CONTRIBUTING.md`](CONTRIBUTING.md) has the mechanics. An agent
+that does belong to a house is still governed by that house's contract;
+this one governs the repo.
 
 ## What this repo must preserve
 
@@ -34,21 +36,20 @@ discipline applies here as in a live house:
   lineage's answer, names a runner or its tools, or claims a mail domain.
   The one line of attribution a house keeps is its README's "Started from
   house-framework"; everything else about where the shape came from lives
-  in this repo's README, `notes/lineage.md` and the bootstrap commit. The
-  practice a house may take up is `templates/style/<name>.md`, rendered as
+  in git history, starting at the bootstrap commit. The practice a house
+  may take up is `templates/style/<name>.md`, rendered as
   `notes/house-style.md` only by `house init --style <name>`.
 - **This is a tool for strangers.** house-framework is public and meant for
   people who have never heard of the households it grew out of. Personal
-  names and lineage names — the owner's, and the houses `notes/lineage.md`
-  describes — appear in that note alone, as history, and in
-  `lib/lineage-names`, the list `doctor` reads to reject the house names in
-  a generated house. Usage examples, help text, templates, tests and
-  `examples/` use generic names (`example`, `builder`, `Your Name`) and
-  paths that mean the same on every machine. No harness is named outside
-  `templates/harness/` and `.mise/tasks/export/`. The repo-wide test in
-  `test/own_house.bats` greps every file but those two for every name on
-  the list and fails on any other mention; the one personal string it
-  allows is the address of this repository, which a house's README links.
+  names and lineage names appear in `lib/lineage-names` alone, the list
+  `doctor` reads to reject the house names in a generated house. Usage
+  examples, help text, templates, tests and `examples/` use generic names
+  (`example`, `builder`, `Your Name`) and paths that mean the same on
+  every machine. No harness is named outside `templates/harness/` and
+  `.mise/tasks/export/`. The repo-wide test in `test/own_house.bats` greps
+  every file but that one for every name on the list and fails on any
+  other mention; the one personal string it allows is the address of this
+  repository, which a house's README links.
 - **The housekeeper stays voiceless, singular and named.** Its templates
   (`agent/note.housekeeper`, `agent/home/AGENTS.housekeeper`, and each
   harness's `definition.housekeeper`) each state that it has no GitHub
@@ -111,6 +112,6 @@ git diff --check
   `examples/` in the same change; the test task fails on drift.
 - Comments carry constraints, not narrative. No decorative separators.
 - Commit messages: conventional, no footers, no tool attribution.
-- When a template changes and you know which house of the lineage
-  (`notes/lineage.md`) its practice came from, say so in the commit; if you
-  do not, say it is new. Nobody is expected to know.
+- When a template changes and you know which house of the lineage its
+  practice came from, say so in the commit; if you do not, say it is new.
+  Nobody is expected to know.
