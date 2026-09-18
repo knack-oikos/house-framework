@@ -107,9 +107,9 @@ house doctor            # fails, naming each house:decide marker, until the hous
 house export <harness>
 ```
 
-Where the shape came from is history, kept in one place:
-[`notes/lineage.md`](notes/lineage.md) names the households it grew out of
-and says what was kept, what was dropped, and why.
+Where the shape came from is history, kept in git and nowhere in the tree:
+the bootstrap commit names the households it was distilled from, and
+`lib/lineage-names` lists them only so `doctor` can reject them in a house.
 
 ## What `init` writes
 
