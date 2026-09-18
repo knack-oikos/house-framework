@@ -238,8 +238,7 @@ A rule set binds one named agent: five or six lines the code can be
 checked against, in the contract's "Domain rules" section. That section
 says when to write one — when an agent's mistakes would be permanent or
 expensive — and the shape it takes, and you write it there, in your own
-turn. The framework ships none: it does not know your domain, and the four
-sets it once carried were one household's answers.
+turn. The framework ships none: it does not know your domain.
 
 ## Harnesses
 

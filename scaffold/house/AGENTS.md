@@ -110,12 +110,13 @@ saw it.
 ### Domain rules
 
 A rule set binds the agent whose charge it names, the way house style does
-not: it is the reason that agent has a contract at all. Write one here when
-an agent's mistakes would be permanent or expensive — money moved, a login
-granted, a row deleted, a bad change approved — in one shape: a heading that
-names the set, a line that names the agent it binds, then five or six lines,
-each a constraint the code can be checked against. The framework ships none;
-it does not know your domain, and a rule nobody can check is noise.
+not: it is the reason that agent has a contract at all. The owner writes one
+here, in their own turn, when an agent's mistakes would be permanent or
+expensive — money moved, a login granted, a row deleted, a bad change
+approved — in one shape: a heading that names the set, a line that names the
+agent it binds, then five or six lines, each a constraint the code can be
+checked against. The framework ships none; it does not know this house's
+domain, and a rule nobody can check is noise.
 
 ### The tiers — canonical list
 
