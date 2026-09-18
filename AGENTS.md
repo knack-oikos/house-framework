@@ -94,7 +94,7 @@ mise run test        # bats, and a syntax pass over the scaffold's executables
 git diff --check
 ```
 
-- Skeleton files carry `{{KEY}}` — uppercase, no spaces, one of the facts
+- Scaffold files carry `{{KEY}}` — uppercase, no spaces, one of the facts
   listed above and nothing else. mise's own `{{ config_root }}` and
   `{{ env.X }}` have spaces and pass through untouched; keep it that way.
 - The scaffold's executables (`hooks/`, `.mise/tasks/`) must pass
