@@ -261,11 +261,11 @@ its workspace is the house's own: `~/agents/{{HOUSE_NAME}}/`. The
 - **`hooks/agent-identity`** — refuses a commit whose author is not on
   `roster.tsv` unless `{{HOUSE_UPPER}}_OWNER_COMMIT=1`. Install with
   `mise run install-hooks`.
-- **A harness, if any** — this house does not depend on one, and nothing
-  here writes a runner's files. The roster and each agent's home are the
-  identity; whatever definition a runner wants is a projection of those,
-  written outside the house by the owner and Tier 2 to change. The
-  housekeeper's definition, where one exists, is named after the house.
+- **A harness, if any** — this house does not depend on one. The roster
+  and each agent's home are the identity; `house export <harness>` projects
+  them into whatever definition a runner wants, and that export is the
+  owner's to run and Tier 2 to change. The housekeeper's definition, where
+  one is exported, is named after the house.
 
 ## Notes worth writing
 

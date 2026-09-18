@@ -59,35 +59,33 @@ here as in a live house:
   Tooling and Communication sections say how.
 - **This is a tool for strangers.** house is public and meant for
   people who have never heard of the households it grew out of. Personal
-  names, lineage names and the name of the runner the lineage ran under
-  appear in `lib/lineage-names` alone: `doctor` reads its `house` lines to
-  reject those names in a generated house, and `test/agent_add.bats` reads
-  its `runner` line to assert a house never carries that one. Usage
+  names and lineage names appear in `lib/lineage-names` alone, the list
+  `doctor` reads to reject the house names in a generated house. Usage
   examples, help text, the scaffold and the tests use generic names
   (`example`, `builder`, `Your Name`) and paths that mean the same on
-  every machine. No harness is named anywhere else. The repo-wide test in
-  `test/own_house.bats` greps every file but that one for every name on
-  the list and fails on any other mention; the one personal string it
-  allows is the address of this repository, which a house's README links.
+  every machine. No harness is named outside `harness/` and
+  `.mise/tasks/export/`. The repo-wide test in `test/own_house.bats` greps
+  every file but that one for every name on the list and fails on any
+  other mention; the one personal string it allows is the address of this
+  repository, which a house's README links.
 - **The housekeeper stays voiceless, singular and named.** Its scaffold
-  (`scaffold/agent/housekeeper/`) states that it has no GitHub identity and
-  no mail by design, and the contract's Tooling clause excludes it from any
+  (`scaffold/agent/housekeeper/`, and each harness's
+  `definition.housekeeper`) states that it has no GitHub identity and no
+  mail by design, and the contract's Tooling clause excludes it from any
   identity entry the owner files. Its name is the constant `HOUSEKEEPER`
-  in `lib/house.sh`; its home is keyed by the house name, and a runner's
-  definition for it, where one exists, is named after the house. Every
-  house has it from `init`. Do
+  in `lib/house.sh`; its home is keyed by the house name, and an exported
+  definition is named after the house. Every house has it from `init`. Do
   not add a rename flag, a `--github` or `--mail` path, a way to skip it,
   or a way to have two; a house that wants a speaking agent adds a judge.
 - **The house is harness-agnostic.** `init`, `agent add` and `doctor` read
-  and write only the house, `~/agents/<name>/home` and the roster. Nothing
-  here writes a runner's files: what a runner needs is `roster.tsv`, each
-  home's `AGENTS.md` and the rule that the housekeeper's file is named
-  after the house, and its definition is the owner's to write outside the
-  house. Do not add an exporter, and do not let a harness path, tool name
-  or settings file into the contract, the notes, the homes or the library.
-- **Generated files are never overwritten.** `install_tree` and `agent add`
-  keep what exists and say so. A change to the scaffold reaches an existing
-  house only by hand, in that house's own turn.
+  and write only the house, `~/agents/<name>/home` and the roster. Anything
+  a runner needs lives under `harness/<name>/` and is written only by
+  `.mise/tasks/export/<name>`. Do not let a harness path, tool name or
+  settings file back into the contract, the notes, the homes or the library.
+- **Generated files are never overwritten.** `install_tree`, `agent add` and
+  every exporter keep what exists and say so (`export` takes `--force`). A
+  change to the scaffold reaches an existing house only by hand, in that
+  house's own turn.
 
 ## Working here
 
@@ -101,10 +99,10 @@ git diff --check
   `{{ env.X }}` have spaces and pass through untouched; keep it that way.
 - The scaffold's executables (`hooks/`, `.mise/tasks/`) must pass
   `bash -n`; the test task runs it.
-- `rules/` is the last menu in the tree, moved out of `templates/` whole
-  and awaiting its own removal
-  ([#15](https://github.com/olavostauros/house/issues/15)). Do not add to
-  it.
+- `rules/` and `harness/` are the last menus in the tree, moved out of
+  `templates/` whole and awaiting their own removal
+  ([#15](https://github.com/olavostauros/house/issues/15)). Do
+  not add to them.
 - Comments carry constraints, not narrative. No decorative separators.
 - Commit messages: conventional, no footers, no tool attribution.
 - When the scaffold changes and you know which house of the lineage its

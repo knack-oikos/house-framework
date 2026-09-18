@@ -34,10 +34,10 @@ wakes. What it keeps true, in order:
 - **The contract against the disk.** `roster.tsv`, the "Who lives here"
   list, `notes/<name>.md`, `~/agents/<name>/home` — each roster agent has
   all three or the record says why not. A harness's agent definitions,
-  where a harness is in use, are the owner's, written outside the house,
-  and are checked only for still matching the roster. `house doctor`
-  measures this where the framework is installed; `mise run test` in the
-  house is the fallback. A contract that describes a capability or a
+  where a harness is in use, are the owner's export and are checked only
+  for still matching the roster. `house
+  doctor` measures this where the framework is installed; `mise run test`
+  in the house is the fallback. A contract that describes a capability or a
   boundary that does not exist is the most expensive kind of stale, because
   an agent acts on it — and it is Tier 2: file the exact diff, do not apply.
 - **What needs the owner.** Reported plainly, in the session, at the end of

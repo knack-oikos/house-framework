@@ -209,6 +209,10 @@ house_framework_version() {
     | sed 's/.*, at //; s/\.$//' | head -1 || true
 }
 
+capitalize() {
+  printf '%s' "$1" | sed 's/^./\U&/'
+}
+
 signing_describe() {
   local dir="$1" format key
   [ "$(git -C "$dir" config --type=bool commit.gpgsign 2>/dev/null)" = true ] || return 1
