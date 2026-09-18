@@ -65,29 +65,26 @@ shiv installer, installs `house` from the checkout under test, and runs
 
 ```bash
 curl -fsSL shiv.knacklabs.co/install.sh | bash   # installs mise too, if absent
+mkdir -p ~/.config/shiv/sources                  # source file: see below
+echo '{"house": "olavostauros/house-framework"}' > ~/.config/shiv/sources/house.json
 MISE_JOBS=1 shiv install house                   # serial: see below
 house --version
 ```
 
 Restart the shell once after the first line: the installer adds a line to
-your shell rc and needs it. Bare `shiv install house` takes the newest
-release tag; `shiv install house@main` tracks `main`, `shiv install
-house@v0.1.0` pins, and `shiv update house` moves an install to the newest
-release. `house --version` is what a bug report quotes, and `house version`
-is the same fact from the inside.
-
-Until `house` is in shiv's own index
+your shell rc and needs it. The source file is needed until `house` is in
+shiv's own index
 ([KnickKnackLabs/shiv#176](https://github.com/KnickKnackLabs/shiv/pull/176)
-is the request), name it in a source file first:
-
-```bash
-mkdir -p ~/.config/shiv/sources
-echo '{"house": "olavostauros/house-framework"}' > ~/.config/shiv/sources/house.json
-shiv install house
-```
-
-A fork under another name is the same one line away from being installable
+is the request): without it, `shiv install house` stops at `'house' not
+found in package index`. Once that merges, the two source-file lines go; a
+fork under another name stays the same one line away from being installable
 as `house` for its owner.
+
+Bare `shiv install house` takes the newest release tag; `shiv install
+house@main` tracks `main`, `shiv install house@v0.1.0` pins, and `shiv
+update house` moves an install to the newest release. `house --version` is
+what a bug report quotes, and `house version` is the same fact from the
+inside.
 
 Three things to know about the chain before running it. The installer
 `eval`s a terminal-UI library fetched over the network at run time, and
