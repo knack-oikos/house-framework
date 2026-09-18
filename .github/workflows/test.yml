@@ -22,3 +22,25 @@ jobs:
       - run: git config --global user.name ci && git config --global user.email ci@example.invalid
       - run: mise run test
       - run: git diff --check
+  install:
+    runs-on: ubuntu-latest
+    container: debian:stable-slim
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      MISE_JOBS: "1"
+      SHIV_NONINTERACTIVE: "1"
+    steps:
+      - run: apt-get update -q && apt-get install -y -q --no-install-recommends bash git curl jq ca-certificates
+      - uses: actions/checkout@v6
+      - run: git config --global user.name ci && git config --global user.email ci@example.invalid
+      - run: curl -fsSL shiv.knacklabs.co/install.sh | bash
+      - run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          shiv install house "$GITHUB_WORKSPACE"
+          house --version
+          house version
+          house init t --at /tmp/t --owner x
+          grep -rl 'house:decide' --exclude-dir=.git /tmp/t | while IFS= read -r f; do
+            awk '/<!-- house:decide/ { skip = 1 } !skip { print } skip && /-->/ { skip = 0 }' "$f" > "$f.decided" && mv "$f.decided" "$f"
+          done
+          house doctor --house /tmp/t
