@@ -349,8 +349,71 @@ parse_presets() {
   printf '%s\n' "${out# }"
 }
 
+shiv_pins_in() {
+  [ -f "$1" ] || return 0
+  sed -n 's/^"shiv:\([^"]*\)" = "\([^"]*\)".*$/\1\t\2/p' "$1"
+}
+
 house_shiv_pins() {
-  sed -n 's/^"shiv:\([^"]*\)" = "\([^"]*\)".*$/\1\t\2/p' "$1/mise.toml"
+  shiv_pins_in "$1/mise.toml"
+}
+
+shiv_sources_dir() {
+  printf '%s\n' "${SHIV_SOURCES_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/shiv/sources}"
+}
+
+shiv_index_files() {
+  local f
+  for f in "${VFOX_SHIV_PATH:-${MISE_DATA_DIR:-$HOME/.local/share/mise}/shiv-backend/shiv}/sources.json" \
+           "${SHIV_INSTALL_PATH:-${XDG_DATA_HOME:-$HOME/.local/share}/shiv/packages/shiv}/sources.json"; do
+    [ -f "$f" ] && printf '%s\n' "$f"
+  done
+  return 0
+}
+
+shiv_source_naming() {
+  local pkg="$1" f
+  for f in "$(shiv_sources_dir)"/*.json; do
+    [ -f "$f" ] || continue
+    if grep -qE "\"$pkg\"[[:space:]]*:" "$f"; then printf '%s\n' "$f"; return 0; fi
+  done
+  while IFS= read -r f; do
+    if grep -qE "\"$pkg\"[[:space:]]*:" "$f"; then printf '%s\n' "$f"; return 0; fi
+  done < <(shiv_index_files)
+  return 1
+}
+
+mise_global_config_file() {
+  printf '%s\n' "${MISE_GLOBAL_CONFIG_FILE:-${MISE_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/mise}/config.toml}"
+}
+
+bash_version() {
+  bash --version 2>/dev/null | sed -n '1s/.*version \([0-9][0-9.]*\).*/\1/p'
+}
+
+git_version() {
+  git --version 2>/dev/null | sed -n '1s/^git version \([0-9][0-9.]*\).*/\1/p'
+}
+
+version_at_least() {
+  local have_major have_minor want_major want_minor
+  IFS=. read -r have_major have_minor _ <<< "$1"
+  IFS=. read -r want_major want_minor _ <<< "$2"
+  [ "${have_major:-0}" -gt "${want_major:-0}" ] \
+    || { [ "${have_major:-0}" -eq "${want_major:-0}" ] && [ "${have_minor:-0}" -ge "${want_minor:-0}" ]; }
+}
+
+git_identity() {
+  local dir="$1" key="$2" value=""
+  case "$key" in
+    name)  value="${GIT_AUTHOR_NAME:-${GIT_COMMITTER_NAME:-}}" ;;
+    email) value="${GIT_AUTHOR_EMAIL:-${GIT_COMMITTER_EMAIL:-}}" ;;
+  esac
+  [ -n "${value:-$(git -C "$dir" config "user.$key" 2>/dev/null || true)}" ]
+}
+
+on_path() {
+  case ":$PATH:" in *":$1:"*) ;; *) return 1 ;; esac
 }
 
 exact_version() {

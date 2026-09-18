@@ -12,9 +12,30 @@ FAILS=0
 ok()   { say "ok:   $*"; }
 warn() { say "warn: $*"; }
 fail() { say "fail: $*"; FAILS=$((FAILS + 1)); }
+note() { say "note: $*"; }
 
 say "house: $(display_path "$HOUSE")"
 say "work:  $(display_path "$WORK")"
+say ""
+
+version="$(bash_version)"
+if version_at_least "$version" 4; then ok "bash $version"; else fail "bash $version: house needs bash 4 or newer first on PATH"; fi
+version="$(git_version)"
+if version_at_least "$version" 2.28; then ok "git $version"; else fail "git $version: house init needs git 2.28 or newer for git init -b"; fi
+for key in name email; do
+  if git_identity "$WORK" "$key"; then ok "git user.$key"; else fail "git user.$key is unset, so house init cannot commit → git config --global user.$key '…'"; fi
+done
+if command -v mise >/dev/null 2>&1; then ok "mise on PATH"; else fail "mise is not on PATH, and every house command runs through it → put the directory holding mise on PATH"; fi
+if [ -n "${HOUSE_CALLER_PWD:-}" ]; then
+  if command -v jq >/dev/null 2>&1; then ok "jq on PATH"; else warn "jq is not on PATH: without it the house shim runs 'house agent add' as 'mise run agent add' → install jq"; fi
+fi
+if on_path "$HOME/.local/bin"; then ok "$(display_path "$HOME/.local/bin") on PATH"; else warn "$(display_path "$HOME/.local/bin") is not on PATH, and shiv and mise install there → export PATH=\"\$HOME/.local/bin:\$PATH\""; fi
+recorded="$(house_framework_version "$HOUSE")"
+running="$(framework_version)"
+if [ -z "$recorded" ]; then note "framework: the README records no framework version (this tool is $running)"
+elif [ "$recorded" = "$running" ]; then ok "framework: made at $recorded, this tool's version"
+else note "framework: made at $recorded; this tool is $running"
+fi
 say ""
 
 for f in AGENTS.md README.md mise.toml roster.tsv notes/work-queue.md notes/household-backlog.md \
@@ -73,6 +94,13 @@ if [ -n "$pins" ]; then
   fi
   while IFS=$'\t' read -r pkg version; do
     if exact_version "$version"; then ok "shiv:$pkg $version: exact pin"; else fail "shiv:$pkg $version: a range, not a release; pin the exact version (a floating range deadlocks vfox-shiv: https://github.com/KnickKnackLabs/vfox-shiv/issues/36)"; fi
+    if named_by="$(shiv_source_naming "$pkg")"; then
+      ok "shiv:$pkg: named by $(display_path "$named_by")"
+    elif [ -z "$(shiv_index_files)" ]; then
+      warn "shiv:$pkg: not named by any source file under $(display_path "$(shiv_sources_dir)"), and no shiv index is on this machine yet; mise install fetches the KnickKnackLabs index, and a package outside it needs $(display_path "$(shiv_sources_dir)")/$pkg.json"
+    else
+      fail "shiv:$pkg: not named by any source file under $(display_path "$(shiv_sources_dir)") or by $(shiv_index_files | paste -sd ' ') → $(display_path "$(shiv_sources_dir)")/$pkg.json"
+    fi
     if package_installed "$HOUSE" "$pkg" "$version"; then ok "shiv:$pkg $version: installed"; else warn "shiv:$pkg $version: not installed → mise -C $(display_path "$HOUSE") install"; fi
     case "$pkg" in
       notes)
@@ -96,6 +124,17 @@ if [ -n "$pins" ]; then
         ;;
     esac
   done <<< "$pins"
+  global="$(mise_global_config_file)"
+  global_pins=0
+  floating=0
+  while IFS=$'\t' read -r pkg version; do
+    [ -n "$pkg" ] || continue
+    global_pins=$((global_pins + 1))
+    exact_version "$version" && continue
+    floating=$((floating + 1))
+    warn "$(display_path "$global"): shiv:$pkg $version is a range; a floating range in the global mise config deadlocks the nested install on release day (https://github.com/KnickKnackLabs/vfox-shiv/issues/36) → pin the exact version there"
+  done < <(shiv_pins_in "$global")
+  [ "$global_pins" -eq 0 ] || [ "$floating" -gt 0 ] || ok "$(display_path "$global"): every shiv: pin is exact"
 fi
 
 say ""
