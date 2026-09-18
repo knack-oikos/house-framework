@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Print the framework version: the tag at HEAD, else the nearest tag and commit, else unknown"
+set -euo pipefail
+
+source "$MISE_CONFIG_ROOT/lib/house.sh"
+
+framework_version

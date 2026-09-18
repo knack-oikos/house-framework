@@ -189,6 +189,26 @@ today() {
   printf '%s\n' "${HOUSE_TODAY:-$(date +%Y-%m-%d)}"
 }
 
+framework_version() {
+  if [ -n "${HOUSE_FRAMEWORK_VERSION:-}" ]; then
+    printf '%s\n' "$HOUSE_FRAMEWORK_VERSION"
+    return
+  fi
+  if [ "$(git -C "$HOUSE_REPO_DIR" rev-parse --show-toplevel 2>/dev/null)" = "$(cd "$HOUSE_REPO_DIR" && pwd -P)" ]; then
+    git -C "$HOUSE_REPO_DIR" describe --tags --exact-match HEAD 2>/dev/null \
+      || git -C "$HOUSE_REPO_DIR" describe --tags --always HEAD 2>/dev/null \
+      && return
+  fi
+  printf 'unknown\n'
+}
+
+house_framework_version() {
+  [ -f "$1/README.md" ] || return 0
+  tr '\n' ' ' < "$1/README.md" \
+    | grep -oE 'Started from \[house-framework\]\([^)]*\) on [0-9-]+, at [^ ]+\.' \
+    | sed 's/.*, at //; s/\.$//' | head -1 || true
+}
+
 capitalize() {
   printf '%s' "$1" | sed 's/^./\U&/'
 }
