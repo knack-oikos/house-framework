@@ -21,8 +21,8 @@ generated it and is not bound by the framework's license.
 
 A house does not depend on any agent harness. Everything it generates is
 markdown, bash, git and `mise`; what a runner needs is already in the
-roster and in each agent's home, and is projected into the runner's own
-files outside the house.
+roster and in each agent's home, and the runner's own files are written
+outside the house, by you.
 
 The framework asserts, and a fresh house is complete. There is no menu of
 styles, packages or rule sets to choose from, and no question left in the
@@ -155,7 +155,7 @@ the bootstrap commit names the households it was distilled from, and
 | Path | What it is |
 |---|---|
 | `AGENTS.md` | the contract: what the house is, who owns it, the roster, how the owner merges, three rules that protect the guard and the shared checkout, a Domain rules section for you to write into, the tiers, the loosenings table, the two-key rule, the Read-first table |
-| `roster.tsv` | who counts as an agent, with role, owned directory and kind — read by the guard, `agent-env`, `welcome`, `doctor` and every exporter; the housekeeper is its first row |
+| `roster.tsv` | who counts as an agent, with role, owned directory and kind — read by the guard, `agent-env`, `welcome` and `doctor`; the housekeeper is its first row |
 | `notes/work-queue.md` | the owner files entries here, each addressed to one agent |
 | `notes/household-backlog.md` | Tier 2 proposals; empty |
 | `notes/house-style.md` | how the house likes its work done — small reviewable branches, merges that keep history, failures said out loud, nothing left unpushed or undocumented — wired to Read-first; practice, not authority, and yours to change |
@@ -204,8 +204,8 @@ owner in the session.
 
 The housekeeper is the house speaking, so its identity is the house's. Its
 home is `~/agents/<house>/home/`, not `~/agents/housekeeper/`, and a
-harness definition exported for it is named after the house. Two houses on
-one machine therefore never collide, and each keeps its own.
+runner's definition for it, where one exists, is named after the house. Two
+houses on one machine therefore never collide, and each keeps its own.
 
 It carries **no GitHub account, no signing key and no mail, permanently.**
 Its note and its home say so, and the contract excludes it from any identity
@@ -247,12 +247,9 @@ file names one. What a runner needs is already in the house: `roster.tsv`
 (name, role, owned directory, kind), each home's `AGENTS.md` as the
 agent's brief, and the rule that the housekeeper's file is named after the
 house. A runner's definition is a projection of those, written outside the
-house, kept once written, and overwritten only when you ask. The house
-contract makes every such definition Tier 2.
-
-One exporter still ships, `house export claude-code`, from `harness/` and
-`.mise/tasks/export/`; it is the one place a runner is named and is being
-removed ([#15](https://github.com/olavostauros/house/issues/15)).
+house by you, in your own turn; the house contract makes every such
+definition Tier 2, and nothing in this repository writes one. The framework
+names no runner.
 
 ## Invariants
 
@@ -268,8 +265,7 @@ These hold in every house, and `house doctor` checks the ones a script can:
 - **Nobody merges but the owner**, until a loosening says otherwise.
 - **The roster is one file**, and the guard fails closed without it.
 - **Homes are the agent's boundary**, not the house's: `agent add` creates
-  them once and never overwrites them. Exported definitions are kept the
-  same way.
+  them once and never overwrites them.
 - **The house is harness-agnostic.** `init`, `agent add` and `doctor` never
   read or write a runner's files.
 - **There is one housekeeper, named `housekeeper`, homed under the house's
@@ -291,13 +287,13 @@ git diff --check
 
 `test` is hidden from the shim's surface (`hide = true` in its header), so
 `house test` is not a command and `mise run test` is; the user-facing
-surface is `init`, `doctor`, `version`, `agent add` and `export <harness>`.
-How a release is cut is in
-[`CONTRIBUTING.md`](CONTRIBUTING.md).
+surface is `init`, `doctor`, `version` and `agent add`. How a release is cut
+is in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 The tests scaffold houses into temporary directories with `HOUSE_AGENTS_ROOT`
-and `HOUSE_DEFINITIONS_DIR` pointed away from your real `~/agents` and from
-any harness's definitions. Nothing under your home is touched.
+pointed away from your real `~/agents`, and `HOUSE_DEFINITIONS_DIR` at an
+empty directory they assert stays empty: nothing here writes a runner's
+files. Nothing under your home is touched.
 
 How to propose a change is in [`CONTRIBUTING.md`](CONTRIBUTING.md); what a
 change must preserve is in [`AGENTS.md`](AGENTS.md).

@@ -2,7 +2,7 @@ house() {
   local task="$1"
   shift
   case "$task" in
-    agent|export) task="$task:$1"; shift ;;
+    agent) task="$task:$1"; shift ;;
   esac
   cd "$REPO_DIR" && env \
     HOUSE_CALLER_PWD="$CALLER" \
