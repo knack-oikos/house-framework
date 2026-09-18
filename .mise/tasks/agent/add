@@ -29,4 +29,3 @@ else
   say "next: read notes/$NAME.md — its Stance is the framework's for a $KIND, and narrowing it is $NAME's — then commit the house as the owner"
   say "next: file the agent's first entry in notes/work-queue.md, addressed to $NAME"
 fi
-say "next: house export <harness> --house $(display_path "$HOUSE") --agent $NAME, if the agent runs under one"
